@@ -147,7 +147,7 @@
 </head>
 <body>
 <script>/* Build stamp — MUST equal the CACHE name in sw.js. test_version.py enforces it. */
-const FS_BUILD = "ed-v28";
+const FS_BUILD = "ed-v31";
 </script>
 <style>
   #fsReg { --fs-bg:#eef1f4; --fs-card:#ffffff; --fs-text:#17262e; --fs-sub:#5b6b73; --fs-sub2:#7c8a91; --fs-faint:#9fb0b7; --fs-border:#dfe5e9; --fs-accent:#0f5e6b; --fs-accentD:#0b4954;
@@ -183,7 +183,7 @@ const FS_BUILD = "ed-v28";
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
       <span class="edWm" style="font-size:24px;display:inline-flex;align-items:center;gap:9px"><img src="icon-192.png" style="width:34px;height:34px;border-radius:6px" alt=""> <span><span class="w1">Ever</span><span class="w2">Due</span></span></span>
       <!-- EverDue lineage reset (Reece, 29 Jul 2026): EverDue v0.01 beta == Arc Adapt Register v0.01 == FireSpark Register v1.32 / wsr-v46 feature state (fs V1.30), for future diffing -->
-      <span id="fsVerBadge" style="font-size:11px;color:#7c8a91">register V0.24 beta</span>
+      <span id="fsVerBadge" style="font-size:11px;color:#7c8a91">register V0.27 beta</span>
       <span style="flex:1"></span>
       <button class="fsbtn" id="fsFileBtn" title="Files &mdash; load, save a copy, share, OneDrive, export one client">&#128193; Files</button>
       <button class="fsbtn" id="fsLoadRegBtn" title="Load / replace the register file">&#128194; Load</button>
@@ -245,7 +245,7 @@ const FS_BUILD = "ed-v28";
     <button class="btn" id="fsBack" title="Back to site">&#9664; Site</button>
     <button class="btn" id="fsTestBtn" title="Start or continue a Monthly / 6 Monthly / Annual / 5 Yearly test session" style="background:#1b8a3f;border-color:#2fae57;color:#fff;font-weight:700">&#9654; Start test</button>
     <button class="btn" id="fsBinBtn" title="Site recycle bin — replaced/deleted registered devices">&#128465; Bin</button>
-    <span class="title">EverDue <span style="color:#888;font-weight:400;font-size:11px">V0.24 beta</span></span>
+    <span class="title">EverDue <span style="color:#888;font-weight:400;font-size:11px">V0.27 beta</span></span>
     <span id="fsSiteName" style="font-size:12px;color:#8ab4ff;font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
     <button class="btn" id="btnPlans" title="Plans saved on this device">&#9776; Plans</button>
     <button class="btn" id="btnNew" title="Start a new plan">&#65291; New</button>
@@ -377,6 +377,29 @@ const FS_BUILD = "ed-v28";
     <label>Loop</label><input type="text" id="dLoop" autocomplete="off">
     <label>Device number</label><input type="text" id="dDev" autocomplete="off">
     <label>Other info</label><input type="text" id="dInfo" autocomplete="off">
+    <!-- PASS 24 items 5 + 14. Brand/Model/Serial sit together because they come
+         off one label and, with OCR, off one photo. The scan button is hidden
+         until ./ocr/ answers, so EverDue (which ships no ocr/) shows the three
+         boxes and no dead control. -->
+    <div id="idWrap" style="display:none">
+      <label>Brand</label><input type="text" id="dBrand" autocomplete="off">
+      <label>Model</label><input type="text" id="dModel" autocomplete="off">
+      <label>Serial</label><input type="text" id="dSerial" autocomplete="off">
+      <button class="btn" id="dScanBtn" type="button" style="display:none;margin-top:8px">&#128247; Scan label</button>
+    </div>
+    <!-- PASS 24 item 6. Checkbox look, radio behaviour, one value box each,
+         both defaulting to 60 degC with Rate of rise ticked. -->
+    <div id="thWrap" style="display:none">
+      <label>Thermal type</label>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e8e8e8;margin-bottom:6px">
+        <label style="display:flex;align-items:center;gap:5px;flex:1"><input type="checkbox" class="dTh" id="dThRor" value="ror" style="width:17px;height:17px">Rate of rise</label>
+        <input type="text" id="dThRorV" inputmode="numeric" autocomplete="off" style="width:74px;margin:0"><span>&deg;C</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#e8e8e8">
+        <label style="display:flex;align-items:center;gap:5px;flex:1"><input type="checkbox" class="dTh" id="dThFix" value="fixed" style="width:17px;height:17px">Fixed</label>
+        <input type="text" id="dThFixV" inputmode="numeric" autocomplete="off" style="width:74px;margin:0"><span>&deg;C</span>
+      </div>
+    </div>
     <div id="dbaFields" style="display:none">
       <label>A = (dBA, ambient — lowest reading)</label>
       <div style="display:flex;gap:6px"><input type="text" id="dVa" autocomplete="off" style="flex:1"><button class="btn" id="mA" type="button">Measure</button></div>
@@ -688,7 +711,12 @@ const FS_BUILD = "ed-v28";
     <div class="row" style="justify-content:center;gap:6px;margin:2px 0 0">
       <button class="btn primary" id="fsRgnModeBox">&#9645; Box</button>
       <button class="btn" id="fsRgnModePoly">&#11040; Outline</button>
-      <button class="btn" id="fsRgnModeLasso">&#9998; Lasso</button>
+      <span style="display:inline-flex;align-items:center;gap:4px;margin-left:10px">
+        <button class="btn" id="fsRgnZoomOut" title="Zoom out">&minus;</button>
+        <span id="fsRgnZoomLbl" style="font-size:12px;color:#aaa;min-width:44px;display:inline-block">100%</span>
+        <button class="btn" id="fsRgnZoomIn" title="Zoom in">+</button>
+        <button class="btn" id="fsRgnZoomFit" title="Fit the whole sheet">&#10530; Fit</button>
+      </span>
     </div>
     <p id="fsRgnHint" style="font-size:13px;color:#aaa;margin:4px 0 8px">Drag a box around the building you want &mdash; edges don't need to be exact, the white margin is trimmed off automatically.</p>
     <div id="fsRgnWrap" style="position:relative;display:inline-block;max-width:100%">
@@ -697,7 +725,9 @@ const FS_BUILD = "ed-v28";
     </div>
     <div class="row" style="justify-content:center">
       <button class="btn primary" id="fsRgnKeep" disabled>&#10003; Keep selection</button>
-      <button class="btn" id="fsRgnUndo" style="display:none">&#8630; Undo point</button>
+      <button class="btn" id="fsRgnUndo" style="display:none">&#8630; Undo</button>
+      <button class="btn" id="fsRgnRedo" style="display:none">&#8631; Redo</button>
+      <button class="btn" id="fsRgnReset" style="display:none">&#10226; Start again</button>
       <button class="btn" id="fsRgnAll">Keep whole page</button>
       <button class="btn" id="fsRgnCancel">Cancel</button>
     </div>
@@ -975,6 +1005,7 @@ const FS_BUILD = "ed-v28";
     <p style="font-size:12px;color:#8a8a8a;margin-bottom:10px">Stitching sheets? Add the next sheet onto the plan, drag it into place, then <b>Flatten</b> to burn it in.</p>
     <div style="display:flex;flex-direction:column;gap:8px">
       <button class="btn primary" id="photoAdd">&#128444; Add onto current plan (moveable image)</button>
+      <button class="btn" id="photoCrop">&#9986; Cut a shape out of it first, then add it</button>
       <button class="btn" id="photoReplace">&#8635; Replace the plan</button>
       <button class="btn" id="photoCancel">Cancel</button>
     </div>
@@ -1030,6 +1061,32 @@ const FS_BUILD = "ed-v28";
   </div>
 </div>
 
+<!-- PASS 24 item 14 — the OCR sheet.
+
+     The design point worth defending: it does NOT just dump its best guess
+     into three boxes. Label OCR on a scuffed detector in bad light is wrong
+     often enough that silent autofill would put wrong data in a register and
+     look confident doing it. So recognition produces LINES, the lines are
+     shown, keyword hits (BRAND/MODEL/SERIAL/SN) are pre-assigned, and every
+     line carries B/M/S buttons so a wrong guess is one tap to fix and a
+     missed one is one tap to add. Nothing reaches the details fields until
+     Use these is pressed. -->
+<div class="modal" id="ocrModal">
+  <div class="modalbox" style="max-width:560px">
+    <h3>Scan a label</h3>
+    <div style="font-size:13px;color:#999;margin-bottom:8px">Runs on this device. The photo never leaves the tablet.</div>
+    <input type="file" id="ocrFile" accept="image/*" capture="environment" style="width:100%;font-size:14px">
+    <div id="ocrStatus" style="font-size:13px;color:#4caf50;min-height:18px;margin-top:8px"></div>
+    <div id="ocrPick" style="max-height:38vh;overflow:auto;margin-top:8px"></div>
+    <div style="margin-top:10px;font-size:14px;color:#e8e8e8">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span style="width:56px;color:#999">Brand</span><input type="text" id="ocrBrand" autocomplete="off" style="flex:1;margin:0"></div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px"><span style="width:56px;color:#999">Model</span><input type="text" id="ocrModel" autocomplete="off" style="flex:1;margin:0"></div>
+      <div style="display:flex;gap:6px;align-items:center"><span style="width:56px;color:#999">Serial</span><input type="text" id="ocrSerial" autocomplete="off" style="flex:1;margin:0"></div>
+    </div>
+    <div class="row"><button class="btn" id="ocrCancel">Cancel</button><button class="btn" id="ocrUse">Use these</button></div>
+  </div>
+</div>
+
 <div class="modal" id="findModal">
   <div class="modalbox" style="max-width:500px">
     <h3>Find device</h3>
@@ -1060,6 +1117,14 @@ const TYPES = [
   { id:"vesda",    tab:"fire", label:"VESDA",        glyph:"circle",   text:"V",     color:"#7b1fa2" },
   { id:"io",       tab:"fire", label:"Interface",    glyph:"sqtext",   text:"IO",    color:"#546e7a" },
   { id:"hreel",    tab:"fire", label:"Hose Reel",    glyph:"hreel",    text:"",      color:"#c40000" },
+  /* PASS 24 item 7 — VAD, Visual Alarm Device. Reece called it a "visual alarm
+     detector"; the standard term is device and the label follows the standard,
+     because the label is what lands in a register a third party reads. Round
+     like the other detectors so it reads as one at a glance, V in the middle,
+     pink by default, and sound-wave arcs either side because a VAD sounds as
+     well as flashes. Arc style only from refs/pass22-soundwave-ref-fire-bell
+     .jpg — the bell symbol itself is not copied. */
+  { id:"vad",      tab:"fire", label:"VAD",          glyph:"vad",      text:"V",     color:"#e91e8c" },
   { id:"exting",   tab:"fire", label:"Extinguisher", glyph:"exting",   text:"",      color:"#c40000" },
   { id:"exitl",    tab:"exit", label:"Exit Left",    glyph:"exit",     text:"EXIT",  arrow:"l", color:"#1b8a3f" },
   { id:"exit",     tab:"exit", label:"Exit",         glyph:"exit",     text:"EXIT",  arrow:"",  color:"#1b8a3f" },
@@ -1188,6 +1253,36 @@ const stage = document.getElementById("stage");
 const statusEl = document.getElementById("status");
 const sizeSlider = document.getElementById("sizeSlider");
 function sizeVal() { return Math.round(12 * Math.pow(10, (+sizeSlider.value) / 100)); }
+/* PASS 24 item 11 — per-type sticky size.
+
+   "I don't want all of my smoke detectors to look different sizes." The memory
+   and the slider are deliberately the SAME state rather than two: picking a
+   type snaps the slider to that type's remembered size (symSizeSnap, called
+   from setTool), and placing or resizing writes it back (symSizeRemember). A
+   hidden memory that silently overrode the slider would leave the control
+   reading 36 while the symbol landed at 52, and a control that lies about what
+   it is about to do is worse than no control at all.
+
+   localStorage is wrapped the same way "bpm-viewmarkups" is: Safari private
+   mode throws on setItem, and a thrown quota error must never be the reason a
+   symbol failed to land. A miss just means no memory yet, which is the same
+   behaviour as V0.26. */
+const SYMSIZE_KEY = "aa-symsize";
+let symSizes = {};
+try { symSizes = JSON.parse(localStorage.getItem(SYMSIZE_KEY) || "{}") || {}; } catch (e) { symSizes = {}; }
+function symSizeFor(typeId) {
+  const v = symSizes[typeId];
+  return (typeof v === "number" && v >= 2 && v <= 400) ? v : sizeVal();
+}
+function symSizeRemember(typeId, px) {
+  if (!TYPE_MAP[typeId] || !(px >= 2 && px <= 400)) return;
+  symSizes[typeId] = px;
+  try { localStorage.setItem(SYMSIZE_KEY, JSON.stringify(symSizes)); } catch (e) {}
+}
+function symSizeSnap(typeId) {
+  const v = symSizes[typeId];
+  if (typeof v === "number" && v >= 2 && v <= 400) sizeSlider.value = sliderFromSize(v);
+}
 function sliderFromSize(s) { return Math.round(100 * Math.log10(Math.max(12, s) / 12)); }
 
 /* ================= Canvas sizing / coords ================= */
@@ -1270,6 +1365,7 @@ function symDims(o) {   // image-space width/height (before rotation)
   else if (t.glyph === "datap") { w = s * (t.dbl ? 1.25 : 0.95); h = s * 1.1; }
   else if (t.glyph === "msensor") { w = s * 1.5; h = s * 1.5; }
   else if (t.glyph === "hreel") { w = s * 1.35; h = s * 1.2; }
+  else if (t.glyph === "vad") { w = s * 1.9; h = s; }
   else if (t.glyph === "exting") { w = s * 0.98; h = s * 1.25; }
   const rr = ((o.rot || 0) % 360) * Math.PI / 180;
   if (rr) {
@@ -1580,25 +1676,66 @@ function drawSym(c, o, scale) {
     c.fill();
     c.beginPath(); c.rect(-w / 2, -h / 2, w, h); c.stroke();
   } else if (t.glyph === "hreel") {
-    // C17: spiral hose reel with top-right nozzle (clean vector from the reference; default red)
-    const r = s * 0.48;
-    c.strokeStyle = col; c.lineWidth = Math.max(1.4, s * 0.085); c.lineCap = "round"; c.lineJoin = "round";
+    /* PASS 24 item 8 — redrawn against refs/pass22-firehose-reel-correct.jpg.
+       Reece: "still broken/wrong, missing a line". At 6x the reference is
+       unambiguous about which line. The COIL is a single spiral, but the hose
+       LEAVING the coil is a tube drawn with two parallel edges, and the nozzle
+       is an outlined collar / taper / tip ferrule. V0.26 drew one line out of
+       the coil and filled the nozzle solid, which at plan scale read as a
+       black blob with a whisker. Everything here is stroked, nothing is
+       filled, and the tube's lower edge is the spiral's own outer end running
+       on — which is what makes it read as one continuous hose. */
+    const cx = -s * 0.16, cy = s * 0.10, r = s * 0.44;
+    const hw = s * 0.10;                    // hose width, = the tube's two edges apart
+    c.strokeStyle = col; c.lineWidth = Math.max(1.1, s * 0.055);
+    c.lineCap = "round"; c.lineJoin = "round";
+    /* the coil: 3.4 turns in to a tight centre curl, starting at the top so the
+       free end is already pointing at the nozzle */
     c.beginPath();
-    for (let k = -6; k <= 96; k++) {
-      const tt = k / 96;
-      const a = -Math.PI / 2 + tt * Math.PI * 2 * 2.6;
-      const rr = r * (1 - 0.82 * tt);
-      const px = Math.cos(a) * rr, py = Math.sin(a) * rr + s * 0.06;
+    for (let k = 0; k <= 120; k++) {
+      const tt = k / 120;
+      const a = -Math.PI / 2 + tt * Math.PI * 2 * 3.4;
+      const rr = r * (1 - 0.88 * tt);
+      const px = cx + Math.cos(a) * rr, py = cy + Math.sin(a) * rr;
       if (k === 0) c.moveTo(px, py); else c.lineTo(px, py);
     }
     c.stroke();
-    const ny = -r + s * 0.06;
-    c.beginPath(); c.moveTo(0, ny - s * 0.12); c.lineTo(0, ny + s * 0.08); c.stroke();
+    /* the tube out to the nozzle — the lower edge continues the coil, the upper
+       edge is the line that was missing, and a cap closes them at the coil end */
+    const yLo = cy - r, yHi = yLo - hw, xN = s * 0.30;
     c.beginPath();
-    c.moveTo(s * 0.04, ny - s * 0.10); c.lineTo(s * 0.58, ny - s * 0.035);
-    c.lineTo(s * 0.58, ny + s * 0.035); c.lineTo(s * 0.04, ny + s * 0.07);
-    c.closePath(); c.fillStyle = col; c.fill();
-    c.beginPath(); c.moveTo(s * 0.62, ny - s * 0.055); c.lineTo(s * 0.62, ny + s * 0.02); c.stroke();
+    c.moveTo(cx, yLo); c.lineTo(xN, yLo);
+    c.moveTo(cx + s * 0.02, yHi); c.lineTo(xN, yHi);
+    c.moveTo(cx, yLo); c.lineTo(cx + s * 0.02, yHi);
+    c.stroke();
+    /* nozzle: collar band, taper, tip ferrule — all outline, per the reference */
+    const xC = s * 0.36, xT = s * 0.60, xE = s * 0.66, tHi = s * 0.018;
+    const yMid = (yLo + yHi) / 2;
+    c.beginPath();
+    c.rect(xN, yHi, xC - xN, hw);
+    c.moveTo(xC, yHi); c.lineTo(xT, yMid - tHi);
+    c.moveTo(xC, yLo); c.lineTo(xT, yMid + tHi);
+    c.moveTo(xT, yMid - tHi); c.lineTo(xT, yMid + tHi);
+    c.rect(xT, yMid - s * 0.05, xE - xT, s * 0.10);
+    c.stroke();
+  } else if (t.glyph === "vad") {
+    /* PASS 24 item 7 — VAD. The circle is the same construction as every other
+       detector (fill, white ring, letter) so it sits in a row of them without
+       looking imported. The arcs are drawn OUTSIDE the ring in the symbol
+       colour: three a side, growing outward, swept +/-38 degrees about the
+       horizontal so they read as sound leaving the device rather than as a
+       decorative halo. Style taken from the bell reference, geometry is ours. */
+    const r = s / 2;
+    c.fillStyle = col; c.strokeStyle = "#ffffff";
+    c.lineWidth = Math.max(1, r * 0.12);
+    c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.strokeStyle = col; c.lineWidth = Math.max(1, r * 0.14); c.lineCap = "round";
+    const sw = 38 * Math.PI / 180;
+    [1.28, 1.56, 1.84].forEach(m => {
+      c.beginPath(); c.arc(0, 0, r * m, -sw, sw); c.stroke();
+      c.beginPath(); c.arc(0, 0, r * m, Math.PI - sw, Math.PI + sw); c.stroke();
+    });
+    if (t.text) glyphText(t.text, s * 0.55);
   } else if (t.glyph === "exting") {
     // C17: extinguisher - body in symbol colour, black top hardware + horn,
     // band colour set by the Details "Type" selector (o.xt, see XT_BANDS)
@@ -2822,7 +2959,9 @@ function rasterTransform(o, mode) {
     if (mode === "h") { cx.scale(-1, 1); cx.drawImage(el, -c.width, 0); }
     else { cx.scale(1, -1); cx.drawImage(el, 0, -c.height); }
   }
-  o.src = c.toDataURL("image/jpeg", 0.9);
+  /* keep an alpha-capable sheet alpha-capable — a rotate must not flatten an
+     outlined import's notch into a black block on the way through JPEG */
+  o.src = fsReEncodePlan(c, o.src, 0.9);
 }
 
 function rotObj(o) {
@@ -2956,11 +3095,19 @@ document.getElementById("btnSame").onclick = () => {
 };
 
 sizeSlider.addEventListener("input", () => {
-  if (!selection.length) return;
+  /* PASS 24 item 11: dragging the slider with a symbol type armed but nothing
+     selected still teaches the memory. Without this branch the only way to set
+     a type's size would be to place one at the wrong size and fix it, which is
+     the exact fiddling the item exists to remove. */
+  if (!selection.length) {
+    if (TYPE_MAP[activeTool]) symSizeRemember(activeTool, sizeVal());
+    return;
+  }
   const v = sizeVal();
   selection.forEach(o => {
     if (o.kind === "ink" || o.kind === "shape") o.width = v / 8;
     else if (o.kind === "sym" || o.kind === "text" || o.kind === "callout") o.size = v;
+    if (o.kind === "sym") symSizeRemember(o.type, v);
   });
   draw();
 });
@@ -3459,6 +3606,9 @@ function updateTestCounter() {
 }
 function setTool(id) {
   activeTool = id;
+  /* PASS 24 item 11 — snap the slider to this type's remembered size, so the
+     control reads what the next placement will actually be. */
+  if (TYPE_MAP[id]) symSizeSnap(id);
   if (!viewMarkups && (id === "hatch" || MARKUP_TOOLS.some(m => m.id === id))) {
     viewMarkups = true; try { localStorage.setItem("bpm-viewmarkups", "1"); } catch (e) {}
     if (activeTab === "views") buildPalette();
@@ -3883,7 +4033,7 @@ function loadImageFile(file) {
       cx0.drawImage(im, 0, 0);
       const cc = await fsRegionPick(c0);
       if (!cc) { updateStatus(); return; }
-      const dataUrl = cc.toDataURL("image/jpeg", 0.92);
+      const dataUrl = fsEncodePlan(cc, 0.92);
       const im2 = new Image();
       im2.onload = () => setImage(im2, dataUrl, false);
       im2.src = dataUrl;
@@ -3909,6 +4059,16 @@ function pendingIsPdf() {
 document.getElementById("photoAdd").onclick = () => {
   document.getElementById("photoModal").classList.remove("show");
   if (pendingPhoto) { if (pendingIsPdf()) loadPdfFile(pendingPhoto, true); else insertImageObject(pendingPhoto); }
+  pendingPhoto = null;
+};
+/* PASS 23 — the third door. Reece, 7 Aug: "I would like this option if I was
+   importing a photo too... it's the same premises." He already had it on the
+   two routes where a photo IS the plan; this is the one where it sits on top
+   of one, and where Pass 20 deliberately withheld it because most such photos
+   are evidence. Offering it rather than forcing it keeps both decisions. */
+document.getElementById("photoCrop").onclick = () => {
+  document.getElementById("photoModal").classList.remove("show");
+  if (pendingPhoto) { if (pendingIsPdf()) loadPdfFile(pendingPhoto, true); else insertImageObject(pendingPhoto, true); }
   pendingPhoto = null;
 };
 document.getElementById("photoReplace").onclick = () => {
@@ -3963,6 +4123,43 @@ function ensurePdfJs() {
    intact so a one-argument call can resurrect the V0.22 whole-page trim.
    A bounding box can only OVER-include (a faint
    border makes the crop a no-op); it cannot cut the building off. */
+/* PASS 23 — encoding a plan, now that an outlined one can carry alpha.
+
+   fsJpegFlat is the ONLY way a plan should ever reach JPEG. JPEG has no
+   alpha channel and Chrome encodes transparent pixels BLACK, so a canvas
+   holding an outlined import must be composited onto white first. Measured,
+   not assumed: toDataURL("image/jpeg") on a transparent region returns
+   rgb(0,0,0). Routing every flatten through one function is what stops a
+   future export path reopening this by accident.
+
+   fsEncodePlan keeps alpha when there is alpha to keep. Plans are line art,
+   so the lossless formats are not the expensive choice here — on a 2400x3106
+   sheet, JPEG q0.92 measures 379 KB, PNG 169 KB and WebP q0.92 48 KB. WebP
+   is tried first and PROBED rather than assumed: engines that cannot encode
+   it silently hand back a PNG data URL, so the prefix is the test.
+
+   fsReEncodePlan is for a canvas being rewritten from an existing source —
+   a rotate, a flip, a resize. It keeps an alpha-capable source alpha-capable.
+   Without it the first ninety-degree turn of an outlined sheet would flatten
+   its notch to a black block. */
+function fsJpegFlat(c, q) {
+  const f = document.createElement("canvas");
+  f.width = c.width; f.height = c.height;
+  const fx = f.getContext("2d");
+  fx.fillStyle = "#ffffff"; fx.fillRect(0, 0, f.width, f.height);
+  fx.drawImage(c, 0, 0);
+  return f.toDataURL("image/jpeg", q == null ? 0.92 : q);
+}
+function fsAlphaUrl(c) {
+  const w = c.toDataURL("image/webp", 0.92);
+  return w.indexOf("data:image/webp") === 0 ? w : c.toDataURL("image/png");
+}
+function fsEncodePlan(c, q) {
+  return c.__fsAlpha ? fsAlphaUrl(c) : fsJpegFlat(c, q);
+}
+function fsReEncodePlan(c, src, q) {
+  return /^data:image\/(png|webp)/.test(src || "") ? fsAlphaUrl(c) : fsJpegFlat(c, q);
+}
 function fsPdfTrim(c, auto) {
   try {
     const w = c.width, h = c.height;
@@ -3972,7 +4169,11 @@ function fsPdfTrim(c, auto) {
       const off = y * w * 4;
       for (let x = 0; x < w; x++) {
         const i = off + x * 4;
-        if (d[i] < 250 || d[i + 1] < 250 || d[i + 2] < 250) {
+        /* PASS 23: a fully transparent pixel is BLANK, not ink. It reads
+           (0,0,0,0), and the old RGB-only test saw 0 < 250 and counted it as
+           content — which would have made an outlined import untrimmable the
+           moment its outside stopped being white. Alpha is checked first. */
+        if (d[i + 3] !== 0 && (d[i] < 250 || d[i + 1] < 250 || d[i + 2] < 250)) {
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
           if (y < minY) minY = y;
@@ -3995,11 +4196,19 @@ function fsPdfTrim(c, auto) {
   } catch (e) { return c; }
 }
 
-/* V0.24 PASS 21 — the picker learns shapes: box, polygon, freehand lasso.
+/* V0.25 PASS 22 — the picker keeps two shapes: box and outline.
    An L-shaped building beside a title block is exactly where a rectangle
    over-includes (Reece, 6 Aug, on the Hunter Health sheet) — so trace it:
-   Outline = tap corner by corner, tap your first point again to close;
-   Lasso = one continuous stroke, the loop closes when you let go.
+   Outline = tap corner by corner, tap your first point again to close.
+   Freehand LASSO shipped in V0.24 and was cut in V0.25 — "way too difficult
+   and impractical to use" on a tablet in the field (Reece, 7 Aug). It was
+   only ever a third way to fill pts[]; Outline inherits everything below.
+   V0.25 also reworked Outline itself (item 10): the sheet zooms 1x-6x and
+   pans by dragging, every placed point is a draggable knob that stays
+   draggable AFTER the loop closes, undo/redo/start-again run off a snapshot
+   stack, and the line is solid and haloed instead of thin and dashed.
+   A point is placed on pointer UP, which is what makes pan and knob-drag
+   distinguishable from a tap at all — see the block at disp.onpointerdown.
    Everything outside the closed path is filled white and discarded, then
    fsPdfTrim in AUTO mode tightens the frame — the V0.23 plumbing all
    reuses; the path replaces the box, nothing else moved.
@@ -4018,77 +4227,245 @@ function fsRegionPick(srcCanvas, forObject) {
     const undo = document.getElementById("fsRgnUndo");
     const hint = document.getElementById("fsRgnHint");
     const modeBtns = { box: document.getElementById("fsRgnModeBox"),
-                       poly: document.getElementById("fsRgnModePoly"),
-                       lasso: document.getElementById("fsRgnModeLasso") };
+                       poly: document.getElementById("fsRgnModePoly") };
+    const redo = document.getElementById("fsRgnRedo");
+    const reset = document.getElementById("fsRgnReset");
+    const zIn = document.getElementById("fsRgnZoomIn");
+    const zOut = document.getElementById("fsRgnZoomOut");
+    const zFit = document.getElementById("fsRgnZoomFit");
+    const zLbl = document.getElementById("fsRgnZoomLbl");
     const HINTS = {
       box: "Drag a box around the building you want — edges don't need to be exact, the white margin is trimmed off automatically.",
-      poly: "Tap corner by corner around the building — tap your first point again to close the loop (✓ Keep also closes it).",
-      lasso: "Draw around the building in one continuous stroke — let go and the loop closes itself."
+      poly: "Tap corner by corner around the building — tap your first point again to close the loop. Drag any dot to move it, even after the loop closes. Pinch or use ＋/－ to zoom, drag the sheet to aim; ✓ Keep is the last word."
     };
     const k = Math.min(1, 1400 / Math.max(srcCanvas.width, srcCanvas.height));
     disp.width = Math.max(1, Math.round(srcCanvas.width * k));
     disp.height = Math.max(1, Math.round(srcCanvas.height * k));
     const dcx = disp.getContext("2d");
-    const blit = () => dcx.drawImage(srcCanvas, 0, 0, disp.width, disp.height);
     let mode = "box", sel = null, pts = [], closed = false, dragging = false;
+    /* PASS 22 item 10 — picker zoom. `pts` stay in UNZOOMED display-canvas
+       coordinates; only blit(), the overlay transform, pos() and show() know
+       zoom exists. That is deliberate: paint()'s evenodd wash, keep.onclick's
+       bounding box and the clip path all keep working unchanged, so the
+       winding fix does not have to be re-proved against a second coordinate
+       space. {vx, vy} is the top-left of the visible region IN DISP COORDS. */
+    let vz = 1, vx = 0, vy = 0;
+    const VZMIN = 1, VZMAX = 6;
+    const clampView = () => {
+      const w = disp.width / vz, h = disp.height / vz;
+      vx = Math.max(0, Math.min(Math.max(0, disp.width - w), vx));
+      vy = Math.max(0, Math.min(Math.max(0, disp.height - h), vy));
+    };
+    const blit = () => {
+      dcx.setTransform(1, 0, 0, 1, 0, 0);
+      dcx.drawImage(srcCanvas,
+                    vx / k, vy / k, disp.width / (vz * k), disp.height / (vz * k),
+                    0, 0, disp.width, disp.height);
+    };
+    /* undo/redo: snapshots of the WHOLE shape, pushed before every mutation.
+       A knob drag is one step (pushed on pointerdown), not one per move. */
+    const hist = [], future = [];
+    const shot = () => ({ pts: pts.map(q => ({ x: q.x, y: q.y })), closed: closed });
+    const put = st => { pts = st.pts.map(q => ({ x: q.x, y: q.y })); closed = st.closed; };
+    const snapshot = () => {
+      hist.push(shot());
+      if (hist.length > 80) hist.shift();
+      future.length = 0;          /* a new edit invalidates the redo branch */
+    };
     const paint = () => {
       blit();
       if (!pts.length) return;
+      dcx.save();
+      /* everything below is drawn in DISP coords; the view does the zoom */
+      dcx.setTransform(vz, 0, 0, vz, -vx * vz, -vy * vz);
       if (closed) {
-        /* wash out what the path will discard — the preview IS the contract */
+        /* wash out what the path will discard — the preview IS the contract.
+           MUST stay "evenodd" and MUST stay in step with cx2.clip("evenodd")
+           in keep.onclick; see the note there before touching either. */
         dcx.save();
         dcx.beginPath();
         dcx.rect(0, 0, disp.width, disp.height);
         dcx.moveTo(pts[0].x, pts[0].y);
         for (let i = 1; i < pts.length; i++) dcx.lineTo(pts[i].x, pts[i].y);
         dcx.closePath();
-        dcx.fillStyle = "rgba(255,255,255,.72)";
+        /* PASS 23 — the wash is the workspace background (#1a1d21), not white.
+           A white wash over a white sheet is invisible, which is exactly how
+           Reece pressed Keep twice on a notch he could not see. The area
+           being discarded is now shown in the colour it will actually be
+           after Keep — transparent, over the workspace — so the preview goes
+           back to being the contract it claims to be. */
+        dcx.fillStyle = "rgba(26,29,33,.82)";
         dcx.fill("evenodd");
         dcx.restore();
       }
-      dcx.save();
-      dcx.strokeStyle = "#ff9800"; dcx.lineWidth = 2; dcx.setLineDash([6, 4]);
+      /* PASS 22 item 10 — "I can hardly see it" (Reece, 7 Aug). A 2px dashed
+         line spends half its length on gaps and reads thinner than it
+         measures at arm's length on a tablet in daylight, so: solid, 3px,
+         over a dark halo so it survives both a white sheet and a dark scan.
+         Widths are divided by vz so the line does not fatten with the zoom. */
+      const lw = 3 / vz, hr = 7 / vz;
+      dcx.lineJoin = "round"; dcx.lineCap = "round";
       dcx.beginPath();
       dcx.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < pts.length; i++) dcx.lineTo(pts[i].x, pts[i].y);
       if (closed) dcx.closePath();
-      dcx.stroke();
-      dcx.setLineDash([]);
-      if (mode === "poly" && !closed) {
-        dcx.fillStyle = "#ff9800";
+      dcx.strokeStyle = "rgba(0,0,0,.6)"; dcx.lineWidth = lw + 2.5 / vz; dcx.stroke();
+      dcx.strokeStyle = "#ff9800"; dcx.lineWidth = lw; dcx.stroke();
+      /* every placed point is a grab knob, closed loop or not — a shape you
+         cannot nudge after closing it is one bad tap away from starting over */
+      for (let i = 0; i < pts.length; i++) {
         dcx.beginPath();
-        dcx.arc(pts[0].x, pts[0].y, 5, 0, Math.PI * 2);
+        dcx.arc(pts[i].x, pts[i].y, hr, 0, Math.PI * 2);
+        dcx.fillStyle = (i === 0 && !closed) ? "#ffffff" : "#ff9800";
         dcx.fill();
+        dcx.lineWidth = 2 / vz;
+        dcx.strokeStyle = "rgba(0,0,0,.7)";
+        dcx.stroke();
       }
       dcx.restore();
+      dcx.setTransform(1, 0, 0, 1, 0, 0);
+    };
+    const setZoom = (z, ax, ay) => {
+      const nz = Math.max(VZMIN, Math.min(VZMAX, z));
+      if (ax === undefined) { ax = vx + disp.width / (2 * vz); ay = vy + disp.height / (2 * vz); }
+      const sx = (ax - vx) * vz, sy = (ay - vy) * vz;   /* hold the anchor still */
+      vz = nz;
+      vx = ax - sx / vz; vy = ay - sy / vz;
+      clampView();
+      zLbl.textContent = Math.round(vz * 100) + "%";
+      zOut.disabled = vz <= VZMIN;
+      zIn.disabled = vz >= VZMAX;
+      paint();
+    };
+    /* poly-only arming, in one place. Box mode manages keep.disabled itself
+       from the drag, and must not have it stamped on by a shared helper. */
+    const arm = () => {
+      if (mode !== "poly") return;
+      keep.disabled = pts.length < 3;
+      undo.style.display = hist.length ? "" : "none";
+      redo.style.display = future.length ? "" : "none";
+      reset.style.display = pts.length ? "" : "none";
     };
     const setMode = m => {
       mode = m;
-      sel = null; pts = []; closed = false; dragging = false;
+      sel = null; pts = []; closed = false; dragging = false; press = null;
+      hist.length = 0; future.length = 0;
       box.style.display = "none";
       keep.disabled = true;
       undo.style.display = "none";
+      redo.style.display = "none";
+      reset.style.display = "none";
       hint.textContent = HINTS[m];
       for (const key in modeBtns) modeBtns[key].classList.toggle("primary", key === m);
-      blit();
+      /* zoom survives a mode switch on purpose — he lines the sheet up once
+         and then decides whether a box or an outline suits it */
+      setZoom(vz);
+    };
+    /* raw() is canvas pixels ignoring the view — what a pan is measured in.
+       pos() is the same point in DISP coords, which is what pts[] holds. */
+    const raw = e => {
+      const r = disp.getBoundingClientRect();
+      return { x: (e.clientX - r.left) * (disp.width / r.width),
+               y: (e.clientY - r.top) * (disp.height / r.height) };
     };
     const pos = e => {
-      const r = disp.getBoundingClientRect();
-      return { x: Math.max(0, Math.min(disp.width, (e.clientX - r.left) * (disp.width / r.width))),
-               y: Math.max(0, Math.min(disp.height, (e.clientY - r.top) * (disp.height / r.height))) };
+      const r0 = raw(e);
+      return { x: Math.max(0, Math.min(disp.width, vx + r0.x / vz)),
+               y: Math.max(0, Math.min(disp.height, vy + r0.y / vz)) };
     };
+    /* CSS pixels per disp unit — the conversion that lets a 14px finger and a
+       6px slop threshold mean the same thing at 100% and at 600% */
+    const cssPer = () => (disp.getBoundingClientRect().width / disp.width) * vz;
     const show = () => {
       if (!sel) { box.style.display = "none"; return; }
       const r = disp.getBoundingClientRect(), host = disp.parentElement.getBoundingClientRect();
-      const sx = r.width / disp.width, sy = r.height / disp.height;
-      box.style.left = (r.left - host.left + Math.min(sel.x1, sel.x2) * sx) + "px";
-      box.style.top = (r.top - host.top + Math.min(sel.y1, sel.y2) * sy) + "px";
+      const sx = (r.width / disp.width) * vz, sy = (r.height / disp.height) * vz;
+      box.style.left = (r.left - host.left + (Math.min(sel.x1, sel.x2) - vx) * sx) + "px";
+      box.style.top = (r.top - host.top + (Math.min(sel.y1, sel.y2) - vy) * sy) + "px";
       box.style.width = (Math.abs(sel.x2 - sel.x1) * sx) + "px";
       box.style.height = (Math.abs(sel.y2 - sel.y1) * sy) + "px";
       box.style.display = "block";
     };
+    /* PASS 22 item 10 — ONE pointer state machine, and the change everything
+       else in this item hangs off: an outline point is placed on pointer UP.
+
+       On pointerDOWN a tap and the first frame of a drag are the same event,
+       so V0.24 had no gesture budget left over — it could only place. On
+       pointerup the press has a history: it moved more than MOVEPX CSS px
+       (a pan of a zoomed sheet, or a knob being dragged) or it did not (a
+       tap, which places a point or closes the loop). Zoom, live knobs and
+       drag-to-pan are all that one distinction, spent three ways.
+
+       Both thresholds are CSS px converted through cssPer(), so a finger
+       means a finger at 100% and at 600%. */
+    let press = null;
+    const HITPX = 14, MOVEPX = 6;
+    /* PASS 23 — pinch to zoom. Pass 22 shipped buttons and left pinch out on
+       purpose: a second gesture handler is the same failure class as the
+       workspace wedge in that same pass. Reece drove it and called the
+       buttons "quite fiddly", so it is in — with that pass's leak guard
+       attached from the start rather than after a field report.
+
+       pk holds every live pointer on the canvas. It is emptied from a
+       window-level CAPTURE-phase listener, which fires BEFORE the canvas's
+       own handlers: that ordering is deliberate and load-bearing twice over.
+       It retires a finger that lifts outside the canvas (the leak that wedged
+       the workspace), and it nulls `press` on the way out, so the second
+       finger coming off a pinch cannot land as a tap and drop a stray vertex
+       into the outline. */
+    const pk = new Map();
+    let pinch = null;
+    const pkPair = () => { const v = []; pk.forEach(p => v.push(p)); return v; };
+    const pinchStart = () => {
+      const v = pkPair();
+      pinch = { d0: Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y) || 1, vz0: vz,
+                mx: (v[0].x + v[1].x) / 2, my: (v[0].y + v[1].y) / 2,
+                vx0: vx, vy0: vy };
+    };
+    const pinchStep = () => {
+      const v = pkPair();
+      const d1 = Math.hypot(v[0].x - v[1].x, v[0].y - v[1].y);
+      const mx = (v[0].x + v[1].x) / 2, my = (v[0].y + v[1].y) / 2;
+      /* the sheet point that was under the midpoint when the pinch began is
+         held under the midpoint now — so the sheet tracks the fingers and
+         zoom and two-finger pan come out of the same arithmetic */
+      const ax = pinch.vx0 + pinch.mx / pinch.vz0, ay = pinch.vy0 + pinch.my / pinch.vz0;
+      vz = Math.max(VZMIN, Math.min(VZMAX, pinch.vz0 * (d1 / pinch.d0)));
+      vx = ax - mx / vz; vy = ay - my / vz;
+      clampView();
+      zLbl.textContent = Math.round(vz * 100) + "%";
+      zOut.disabled = vz <= VZMIN;
+      zIn.disabled = vz >= VZMAX;
+      paint();
+    };
+    const pkEnd = e => {
+      const wasPinch = !!pinch;
+      pk.delete(e.pointerId);
+      if (pk.size < 2) pinch = null;
+      if (wasPinch) { press = null; dragging = false; }
+    };
+    window.addEventListener("pointerup", pkEnd, true);
+    window.addEventListener("pointercancel", pkEnd, true);
+    const hitKnob = p => {
+      const rr = HITPX / cssPer();
+      /* newest first: the point just placed wins a tie against an older one
+         sitting under the same finger. Runs whether or not the loop is
+         closed — adjusting a closed outline is the whole ask (Reece, 7 Aug). */
+      for (let i = pts.length - 1; i >= 0; i--)
+        if (Math.hypot(p.x - pts[i].x, p.y - pts[i].y) <= rr) return i;
+      return -1;
+    };
     disp.onpointerdown = e => {
       try { disp.setPointerCapture(e.pointerId); } catch (err) {}
+      pk.set(e.pointerId, raw(e));
+      if (pk.size >= 2) {
+        /* a second finger cancels whatever the first one was starting: no
+           half-drawn box, no vertex placed, no knob dragged */
+        if (pk.size === 2) pinchStart();
+        press = null; dragging = false;
+        e.preventDefault();
+        return;
+      }
       const p = pos(e);
       if (mode === "box") {
         dragging = true;
@@ -4096,57 +4473,82 @@ function fsRegionPick(srcCanvas, forObject) {
         keep.disabled = true;
         show();
       } else if (mode === "poly") {
-        if (!closed) {
-          /* 14 CSS px around the first point closes the loop — a finger, not a pixel */
-          const closeR = 14 * (disp.width / disp.getBoundingClientRect().width);
-          if (pts.length >= 3 && Math.hypot(p.x - pts[0].x, p.y - pts[0].y) <= closeR) closed = true;
-          else pts.push(p);
-          keep.disabled = pts.length < 3;
-          undo.style.display = pts.length ? "" : "none";
-          paint();
-        }
-      } else {
-        dragging = true;
-        closed = false;
-        pts = [p];
-        keep.disabled = true;
-        paint();
+        const kb = hitKnob(p);
+        if (kb >= 0) snapshot();     /* the whole drag is ONE undo step */
+        const r0 = raw(e);
+        press = { rx: r0.x, ry: r0.y, vx: vx, vy: vy, moved: false, knob: kb };
       }
       e.preventDefault();
     };
     disp.onpointermove = e => {
-      if (!dragging) return;
-      const p = pos(e);
-      if (mode === "box") { sel.x2 = p.x; sel.y2 = p.y; show(); }
-      else if (mode === "lasso") {
-        const last = pts[pts.length - 1];
-        if (Math.hypot(p.x - last.x, p.y - last.y) >= 2) { pts.push(p); paint(); }
-      }
-    };
-    disp.onpointerup = () => {
-      if (!dragging) return;
-      dragging = false;
+      if (pk.has(e.pointerId)) pk.set(e.pointerId, raw(e));
+      if (pinch) { if (pk.size >= 2) pinchStep(); return; }
       if (mode === "box") {
-        /* a sub-8px "box" is a stray tap, not intent */
-        if (sel && Math.abs(sel.x2 - sel.x1) > 8 && Math.abs(sel.y2 - sel.y1) > 8) keep.disabled = false;
-        else { sel = null; keep.disabled = true; show(); }
-      } else if (mode === "lasso") {
-        /* a sub-8px scribble is a stray tap, not a lasso */
-        let mnx = 1e9, mny = 1e9, mxx = -1e9, mxy = -1e9;
-        for (let i = 0; i < pts.length; i++) {
-          if (pts[i].x < mnx) mnx = pts[i].x;
-          if (pts[i].x > mxx) mxx = pts[i].x;
-          if (pts[i].y < mny) mny = pts[i].y;
-          if (pts[i].y > mxy) mxy = pts[i].y;
-        }
-        if (pts.length >= 3 && mxx - mnx > 8 && mxy - mny > 8) { closed = true; keep.disabled = false; }
-        else { pts = []; keep.disabled = true; }
+        if (!dragging) return;
+        const p = pos(e);
+        sel.x2 = p.x; sel.y2 = p.y; show();
+        return;
+      }
+      if (!press) return;
+      const r1 = raw(e);
+      if (Math.hypot(r1.x - press.rx, r1.y - press.ry) * (cssPer() / vz) > MOVEPX) press.moved = true;
+      if (press.knob >= 0) {
+        pts[press.knob] = pos(e);
+        paint();
+      } else if (press.moved) {
+        vx = press.vx - (r1.x - press.rx) / vz;
+        vy = press.vy - (r1.y - press.ry) / vz;
+        clampView();
         paint();
       }
     };
+    disp.onpointerup = e => {
+      if (mode === "box") {
+        if (!dragging) return;
+        dragging = false;
+        /* a sub-8px "box" is a stray tap, not intent */
+        if (sel && Math.abs(sel.x2 - sel.x1) > 8 && Math.abs(sel.y2 - sel.y1) > 8) keep.disabled = false;
+        else { sel = null; keep.disabled = true; show(); }
+        return;
+      }
+      if (!press) return;
+      const pr = press;
+      press = null;
+      if (pr.knob >= 0) {
+        if (!pr.moved) {
+          hist.pop();              /* a tap is not an edit — do not leave a no-op on the stack */
+          /* tapping the FIRST knob still closes the loop: that is the gesture
+             the hint has promised since V0.24, and HITPX is the same 14 px
+             radius that used to do it */
+          if (!closed && pr.knob === 0 && pts.length >= 3) { snapshot(); closed = true; }
+        }
+        arm();
+        paint();
+        return;
+      }
+      if (pr.moved) return;        /* that was a pan, not a placement */
+      if (closed) return;          /* taps stop at the close; knobs do not */
+      snapshot();
+      pts.push(pos(e));
+      arm();
+      paint();
+    };
+    /* same leak class as workspace item 4: a press that never lifts on this
+       element would otherwise keep panning the sheet on the next move */
+    disp.onpointercancel = e => { pk.delete(e.pointerId); pinch = null; press = null; dragging = false; };
     const finish = out => {
       disp.onpointerdown = disp.onpointermove = disp.onpointerup = null;
-      keep.onclick = undo.onclick = null;
+      disp.onpointercancel = null;
+      window.removeEventListener("pointerup", pkEnd, true);
+      window.removeEventListener("pointercancel", pkEnd, true);
+      pk.clear();
+      pinch = null;
+      keep.onclick = undo.onclick = redo.onclick = reset.onclick = null;
+      zIn.onclick = zOut.onclick = zFit.onclick = null;
+      /* the picker is reused across imports — leave no control armed and no
+         control disabled from the last visit */
+      undo.style.display = redo.style.display = reset.style.display = "none";
+      zIn.disabled = zOut.disabled = false;
       for (const key in modeBtns) modeBtns[key].onclick = null;
       modal.classList.remove("show");
       resolve(out);
@@ -4184,29 +4586,77 @@ function fsRegionPick(srcCanvas, forObject) {
       const c2 = document.createElement("canvas");
       c2.width = w; c2.height = h;
       const cx2 = c2.getContext("2d");
-      cx2.fillStyle = "#ffffff"; cx2.fillRect(0, 0, w, h);
-      /* clip to the path: inside = the sheet, outside = the white just laid */
+      /* NO white fill here, and that is the point of Pass 23. The output
+         canvas is still a rectangle — that is physics, a canvas has corners —
+         but everything outside the path is now NOTHING rather than white, so
+         a non-convex building's notch shows the workspace through it and does
+         not paint over a sheet stitched underneath. Reece reported the white
+         notch twice, against V0.24 and again against V0.25, because an
+         L-shaped building can never fit a rectangle and the preview washes
+         white over white so it could not warn him. See tests/_probe_notch.py.
+         The box branch above still fills white: a box has no notch. */
+      /* Clip to the path: inside = the sheet, outside = left transparent.
+         "evenodd" is NOT decoration — it must match the preview wash's fill
+         rule at dcx.fill("evenodd") above (still true, still load-bearing:
+         Pass 22 measured a self-crossing trace keeping a patch the preview
+         had discarded — a REAL bug, just not the one Reece was hitting).
+         With the default NONZERO rule a
+         same-direction re-entrant trace keeps its doubly-wound patch here
+         while the preview washed it away, so white the user cut out came
+         back inside the trim bbox (Reece, field, 7 Aug). The preview is what
+         the user consented to when they pressed Keep, so the crop follows the
+         preview. Change one of these two and you must change the other —
+         tests/test_p22_outline.py fails loudly if they drift apart. */
       cx2.save();
       cx2.beginPath();
       cx2.moveTo(pts[0].x / k - x, pts[0].y / k - y);
       for (let i = 1; i < pts.length; i++) cx2.lineTo(pts[i].x / k - x, pts[i].y / k - y);
       cx2.closePath();
-      cx2.clip();
+      cx2.clip("evenodd");
       cx2.drawImage(srcCanvas, x, y, w, h, 0, 0, w, h);
       cx2.restore();
-      finish(fsPdfTrim(c2, true));
+      /* fsPdfTrim hands back a NEW canvas when it crops, so the flag has to
+         ride on the result, not on c2 — it is what tells the encoder to keep
+         alpha instead of flattening the notch to white (or, on JPEG, black) */
+      const cut = fsPdfTrim(c2, true);
+      cut.__fsAlpha = true;
+      finish(cut);
     };
+    /* PASS 22 item 10 — undo is a stack now, not a pop. The V0.24 version
+       walked the shape backwards by hand and could only ever go one way;
+       with snapshots, "undo after closing re-opens the loop" falls out for
+       free (the snapshot taken before closing IS the open loop) and redo
+       becomes possible at all. Redo dies on the next edit — snapshot()
+       clears it — which is the behaviour every editor has and nobody
+       notices until it is missing. */
     undo.onclick = () => {
+      if (mode !== "poly" || !hist.length) return;
+      future.push(shot());
+      put(hist.pop());
+      arm();
+      paint();
+    };
+    redo.onclick = () => {
+      if (mode !== "poly" || !future.length) return;
+      hist.push(shot());
+      put(future.pop());
+      arm();
+      paint();
+    };
+    reset.onclick = () => {
       if (mode !== "poly" || !pts.length) return;
-      if (closed) closed = false;   /* first undo after closing re-opens the loop */
-      else pts.pop();
-      keep.disabled = pts.length < 3;
-      undo.style.display = pts.length ? "" : "none";
+      snapshot();            /* "start again" is itself undoable — a mis-tap
+                                on it must not cost the whole outline */
+      pts = [];
+      closed = false;
+      arm();
       paint();
     };
     modeBtns.box.onclick = () => setMode("box");
     modeBtns.poly.onclick = () => setMode("poly");
-    modeBtns.lasso.onclick = () => setMode("lasso");
+    zIn.onclick = () => setZoom(vz * 1.5);
+    zOut.onclick = () => setZoom(vz / 1.5);
+    zFit.onclick = () => { vx = 0; vy = 0; setZoom(VZMIN); };
     /* V0.24: whole page means the WHOLE page — no trim, no dialog (the picker
        is the main door; Reece's verdict 7 Aug). Resurrect the V0.22 pass with
        finish(fsPdfTrim(srcCanvas)) if a real single-drawing sheet misses it. */
@@ -4242,7 +4692,7 @@ function loadPdfFile(file, asObject) {
       await page.render({ canvasContext: cx2, viewport: vp }).promise;
       const cc = await fsRegionPick(c, asObject);
       if (!cc) { updateStatus(); return; }
-      const dataUrl = cc.toDataURL("image/jpeg", 0.92);
+      const dataUrl = fsEncodePlan(cc, 0.92);
       if (asObject && img) {
         insertImageFromDataUrl(dataUrl, cc.width, cc.height, true);
         updateStatus();
@@ -4442,17 +4892,31 @@ function insertImageFromDataUrl(src, iw, ih, native) {
   draw();
 }
 
-function insertImageObject(f) {
+function insertImageObject(f, pick) {
   if (!f || !img) { if (!img) alert("Load a block plan first."); return; }
   const reader = new FileReader();
   reader.onload = () => {
     const im = new Image();
-    im.onload = () => {
+    im.onload = async () => {
       const mx = 1400;
       const sc = Math.min(1, mx / Math.max(im.naturalWidth, im.naturalHeight));
       const c = document.createElement("canvas");
       c.width = Math.round(im.naturalWidth * sc); c.height = Math.round(im.naturalHeight * sc);
-      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      const icx = c.getContext("2d");
+      if (pick) { icx.fillStyle = "#ffffff"; icx.fillRect(0, 0, c.width, c.height); }
+      icx.drawImage(im, 0, 0, c.width, c.height);
+      /* PASS 23 — `pick` is opt-in from the Add photo modal's third button.
+         Without it this is exactly the Pass 20 behaviour: no picker, 35%,
+         because most photos dropped on a plan are evidence, not sheets. With
+         it, the photo goes through the outline and keeps its alpha, which is
+         what the stitch case actually needs — a rectangular white block over
+         a sheet you are trying to line up is the worst possible outcome. */
+      if (pick) {
+        const cc = await fsRegionPick(c, true);
+        if (!cc) return;
+        insertImageFromDataUrl(fsEncodePlan(cc, 0.85), cc.width, cc.height);
+        return;
+      }
       insertImageFromDataUrl(c.toDataURL("image/jpeg", 0.85), c.width, c.height);
     };
     im.src = reader.result;
@@ -4840,7 +5304,7 @@ document.getElementById("levelInput").addEventListener("change", e => {
         cx2.fillStyle = "#ffffff"; cx2.fillRect(0, 0, c.width, c.height);
         await page.render({ canvasContext: cx2, viewport: vp }).promise;
         const cc = await fsRegionPick(c);
-        if (cc) addLevelFromDataUrl(nm.trim() || "Level", cc.toDataURL("image/jpeg", 0.92));
+        if (cc) addLevelFromDataUrl(nm.trim() || "Level", fsEncodePlan(cc, 0.92));
       })
       .catch(() => alert("Couldn't open that PDF."));
   } else {
@@ -4854,7 +5318,7 @@ document.getElementById("levelInput").addEventListener("change", e => {
         cx0.fillStyle = "#ffffff"; cx0.fillRect(0, 0, c0.width, c0.height);
         cx0.drawImage(im, 0, 0);
         const cc = await fsRegionPick(c0);
-        if (cc) addLevelFromDataUrl(nm.trim() || "Level", cc.toDataURL("image/jpeg", 0.92));
+        if (cc) addLevelFromDataUrl(nm.trim() || "Level", fsEncodePlan(cc, 0.92));
       };
       im.src = reader.result;
     };
@@ -5456,7 +5920,11 @@ const SHAPE_TOOLS = ["line", "brk", "arrow", "rect", "ellipse", "cloud", "callou
 
 cv.addEventListener("pointerdown", e => {
   if (!img) return;
-  cv.setPointerCapture(e.pointerId);
+  /* setPointerCapture throws NotFoundError when the pointer is already gone
+     — real on iPad when the system claims a gesture, or when a slow frame
+     delays dispatch past the lift. Unguarded, the throw aborted this whole
+     handler. fsRegionPick has always wrapped its copy; this never did. */
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
   const p = localXY(e);
   pointers.set(e.pointerId, p);
   moved = false;
@@ -5928,7 +6396,15 @@ function endPointer(e) {
   if (dragMode === "placeOrPan") {
     if (!moved && TYPE_MAP[activeTool]) {
       pushUndo();
-      const m = { kind:"sym", type:activeTool, x:ip.x, y:ip.y, size:sizeVal(), rot:0, fx:false, fy:false, zone:"", loop:"", dev:"", info:"" };
+      /* PASS 24 item 11: the remembered size for THIS type, falling back to the
+         slider the first time a type is ever placed. setTool has already
+         snapped the slider to the same number, so the two agree.
+         PASS 24 item 6: a thermal is born Rate of rise at 60 degC, which is
+         what Reece asked for and also what makes the selector's defaults true
+         of every device rather than only of the ones he happens to open. */
+      const m = { kind:"sym", type:activeTool, x:ip.x, y:ip.y, size:symSizeFor(activeTool), rot:0, fx:false, fy:false, zone:"", loop:"", dev:"", info:"" };
+      if (activeTool === "thermal" || activeTool === "cthermal") { m.thm = "ror"; m.thv = "60"; }
+      symSizeRemember(activeTool, m.size);
       const az = zoneAt(ip.x, ip.y);
       if (az) m.zone = String(az.zn);
       objects.push(m);
@@ -5963,6 +6439,38 @@ function endPointer(e) {
 }
 cv.addEventListener("pointerup", endPointer);
 cv.addEventListener("pointercancel", endPointer);
+/* PASS 22 item 4 — the gesture wedge. ONE entry left behind in `pointers`
+   is unrecoverable without a reload: size never returns to 0, so the next
+   single finger reads as size 2 and takes the PINCH branch (the plan zooms
+   instead of panning), while a genuine two-finger pinch reads as size 3 and
+   no branch claims it. Measured, not guessed. That is the field report
+   exactly — "broke finger pan + pinch-zoom entirely; only a full app restart
+   fixed it (autosave survived fine)".
+
+   An entry leaks whenever the lift never reaches cv: capture refused or lost
+   and the finger came up over another element, or the tab went away
+   mid-gesture. CAPTURE phase on window, so a lift that something else stops
+   propagating still retires its pointer. endPointer ignores ids it does not
+   know, so the duplicate call on cv's own events costs nothing.
+
+   NOTE: neither a whole-plan selection nor a base-raster hit causes this —
+   both were tested and cleared in Pass 22. Do not "fix" the marquee. */
+window.addEventListener("pointerup", endPointer, true);
+window.addEventListener("pointercancel", endPointer, true);
+function fsResetGesture() {
+  if (!pointers.size && dragMode === null) return;
+  pointers.clear();
+  dragMode = null;
+  pinchStart = null;
+  panStart = null;
+  marquee = null;
+  draw();
+}
+/* the lift that never fires at all: app backgrounded mid-gesture */
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") fsResetGesture();
+});
+window.addEventListener("blur", fsResetGesture);
 
 cv.addEventListener("wheel", e => {
   if (!img) return;
@@ -5986,6 +6494,164 @@ let detailsPhoto = undefined;   // undefined = unchanged, null = removed, string
 let failedTouched = false;
 let yearsTouched = {};
 
+/* ================= PASS 24 item 14 — on-device OCR =================
+
+   Everything below runs on the tablet. tesseract is loaded from OUR origin
+   (./ocr/), recognises inside a Web Worker, and the result never leaves the
+   device — rule #1 is not merely respected here, there is no request that
+   could carry a photo anywhere.
+
+   The assets are absent by design until deploy time: patch scripts write text
+   and 5.7 MB of WASM does not belong in one. tests/fetch-ocr-assets.sh puts
+   them in arcadapt/ocr/. Until they exist, fsOcrProbe fails and the button
+   stays hidden, which is also exactly the behaviour EverDue wants for ever. */
+const FS_OCR_BASE = "./ocr/";
+/* ABSOLUTE, and it has to be. Everything below "./ocr/" is loaded from inside
+   a Web Worker, and a relative path there resolves against the WORKER's base,
+   not the document's. Measured: with a relative corePath the worker got as far
+   as the loader and then emscripten died on
+   `XMLHttpRequest: Invalid URL` trying to fetch the .wasm beside it. */
+function fsOcrUrl(f) { return new URL(FS_OCR_BASE + (f || ""), location.href).href; }
+let fsOcrOk = null;          // null = not probed yet, then true/false
+let fsOcrWorkerP = null;
+let fsOcrTargetFields = null;
+
+function fsOcrProbe() {
+  if (fsOcrOk !== null) return Promise.resolve(fsOcrOk);
+  return fetch(FS_OCR_BASE + "tesseract.min.js", { method: "HEAD" })
+    .then(r => { fsOcrOk = !!r.ok; return fsOcrOk; })
+    .catch(() => { fsOcrOk = false; return false; });
+}
+function fsOcrSyncButton() {
+  const b = document.getElementById("dScanBtn");
+  if (!b) return;
+  fsOcrProbe().then(ok => { b.style.display = ok ? "inline-block" : "none"; });
+}
+function fsOcrLoadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error("load " + src));
+    document.head.appendChild(s);
+  });
+}
+/* corePath NAMES A FILE, and that is the whole trick. Given a DIRECTORY,
+   tesseract.js feature-detects and asks for whatever the engine supports —
+   which on this Chromium meant `tesseract-core-relaxedsimd-lstm.wasm.js`, a
+   file we do not ship, and the worker died on importScripts. Measured, not
+   guessed: the first build of this pass did exactly that.
+
+   Naming the file means no probe, so exactly one core has to be shipped and
+   it is always the one that arrives. Plain SIMD rather than relaxed SIMD is
+   deliberately the CONSERVATIVE pick: SIMD has been in iPadOS since 16.4
+   (March 2023), relaxed SIMD is years newer, and a fire tech's tablet is not
+   a machine anyone upgrades for fun.
+
+   THE DEADLINE IS NOT BELT AND BRACES. When emscripten cannot instantiate the
+   module it calls abort(), which surfaces as an uncaught error on the worker
+   and NEVER settles the promise createWorker returned. Measured: the failing
+   build sat on "Initializing tesseract…" for 108 seconds and would have sat
+   there all day. A catch cannot save you from a promise that never rejects,
+   so the race is what turns a hang into a sentence the user can act on. 75 s
+   is generous — a cold start on a real iPad measures well under that, and
+   this only fires when something is actually wrong. */
+const FS_OCR_DEADLINE_MS = 75000;
+function fsOcrWorker(onProg) {
+  if (fsOcrWorkerP) return fsOcrWorkerP;
+  const build = fsOcrLoadScript(fsOcrUrl("tesseract.min.js"))
+    .then(() => Tesseract.createWorker("eng", 1, {
+      workerPath: fsOcrUrl("worker.min.js"),
+      corePath: fsOcrUrl("tesseract-core-simd-lstm.wasm.js"),
+      langPath: fsOcrUrl(),
+      gzip: true,
+      logger: m => { if (onProg) onProg(m); }
+    }));
+  fsOcrWorkerP = Promise.race([
+    build,
+    new Promise((_, rej) => setTimeout(
+      () => rej(new Error("the recogniser did not start in time")), FS_OCR_DEADLINE_MS))
+  ]).catch(e => { fsOcrWorkerP = null; throw e; });
+  return fsOcrWorkerP;
+}
+/* Keyword assignment. Deliberately conservative — it pre-fills only when a line
+   actually says which field it is. Everything else is offered as a choice. */
+function fsOcrGuess(lines) {
+  const out = { brand:"", model:"", serial:"" };
+  const pat = [
+    ["serial", /\b(serial(\s*(no|number))?|s\/?n)\b[:.\s-]*(.+)$/i],
+    ["model",  /\b(model|mdl|type|part(\s*no)?|p\/?n)\b[:.\s-]*(.+)$/i],
+    ["brand",  /\b(brand|make|manufacturer)\b[:.\s-]*(.+)$/i]
+  ];
+  lines.forEach(L => {
+    pat.forEach(([k, re]) => {
+      if (out[k]) return;
+      const m = L.match(re);
+      if (m) {
+        const v = (m[m.length - 1] || "").trim();
+        if (v && v.length <= 40) out[k] = v;
+      }
+    });
+  });
+  /* No brand keyword on most labels — the maker's name is just the biggest
+     word on the sticker. The first line that is mostly letters is the least
+     bad guess, and it is a GUESS the user can see and overwrite, not a silent
+     write into the register. */
+  if (!out.brand) {
+    const cand = lines.find(L => /^[A-Za-z][A-Za-z .&'-]{2,24}$/.test(L.trim()));
+    if (cand) out.brand = cand.trim();
+  }
+  return out;
+}
+function fsOcrRenderPick(lines) {
+  const box = document.getElementById("ocrPick");
+  if (!lines.length) {
+    box.innerHTML = '<div style="font-size:13px;color:#999">Nothing readable. Try again closer, straighter, or with more light \u2014 or just type it in below.</div>';
+    return;
+  }
+  box.innerHTML = lines.map((L, i) =>
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">'
+    + '<div style="flex:1;font-size:13px;color:#e8e8e8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + fsEsc(L) + '</div>'
+    + '<button class="btn ocrAssign" data-i="' + i + '" data-f="brand" type="button" style="padding:2px 8px">B</button>'
+    + '<button class="btn ocrAssign" data-i="' + i + '" data-f="model" type="button" style="padding:2px 8px">M</button>'
+    + '<button class="btn ocrAssign" data-i="' + i + '" data-f="serial" type="button" style="padding:2px 8px">S</button>'
+    + '</div>').join("");
+  box.querySelectorAll(".ocrAssign").forEach(b => {
+    b.onclick = () => {
+      const f = b.getAttribute("data-f");
+      document.getElementById("ocr" + f.charAt(0).toUpperCase() + f.slice(1)).value = lines[+b.getAttribute("data-i")];
+    };
+  });
+}
+function fsOcrOpen() {
+  ["ocrBrand", "ocrModel", "ocrSerial"].forEach(id => { document.getElementById(id).value = ""; });
+  document.getElementById("ocrPick").innerHTML = "";
+  document.getElementById("ocrStatus").textContent = "";
+  document.getElementById("ocrFile").value = "";
+  fsOcrTargetFields = { brand:"dBrand", model:"dModel", serial:"dSerial" };
+  document.getElementById("ocrModal").classList.add("show");
+}
+function fsOcrRun(file) {
+  const st = document.getElementById("ocrStatus");
+  st.textContent = "Loading the recogniser (one-off, about 5 MB)\u2026";
+  return fsOcrWorker(m => {
+    if (m && m.status === "recognizing text") st.textContent = "Reading\u2026 " + Math.round((m.progress || 0) * 100) + "%";
+    else if (m && m.status) st.textContent = String(m.status).charAt(0).toUpperCase() + String(m.status).slice(1) + "\u2026";
+  })
+    .then(w => w.recognize(file))
+    .then(res => {
+      const lines = String(((res || {}).data || {}).text || "")
+        .split(/\r?\n/).map(s => s.trim()).filter(s => s.length > 1).slice(0, 24);
+      st.textContent = lines.length ? "Read " + lines.length + " line" + (lines.length === 1 ? "" : "s") + " \u2014 check them before using." : "";
+      const g = fsOcrGuess(lines);
+      document.getElementById("ocrBrand").value = g.brand;
+      document.getElementById("ocrModel").value = g.model;
+      document.getElementById("ocrSerial").value = g.serial;
+      fsOcrRenderPick(lines);
+    })
+    .catch(e => {
+      st.style.color = "#e07b00";
+      st.textContent = "On-device reading is not available here (" + ((e && e.message) || e) + "). Type the details in instead.";
+    });
+}
 function openDetails() {
   const syms = selection.filter(o => o.kind === "sym");
   // single text/callout: open the text editor instead
@@ -6002,9 +6668,12 @@ function openDetails() {
   document.getElementById("detailsTitle").textContent = multi
     ? syms.length + " devices — filled fields apply to all"
     : (t ? t.label : "Device") + " details";
-  ["dZone", "dLoop", "dDev", "dInfo", "dVa", "dVe"].forEach(id => {
+  /* PASS 24 item 5 — Brand/Model/Serial join the plain-text fields, so they
+     inherit multi-select's "leave blank to keep" semantics for free rather
+     than growing a second, subtly different rule. */
+  ["dZone", "dLoop", "dDev", "dInfo", "dVa", "dVe", "dBrand", "dModel", "dSerial"].forEach(id => {
     const el = document.getElementById(id);
-    el.value = multi ? "" : (syms[0][{ dZone:"zone", dLoop:"loop", dDev:"dev", dInfo:"info", dVa:"va", dVe:"ve" }[id]] || "");
+    el.value = multi ? "" : (syms[0][{ dZone:"zone", dLoop:"loop", dDev:"dev", dInfo:"info", dVa:"va", dVe:"ve", dBrand:"brand", dModel:"model", dSerial:"serial" }[id]] || "");
     el.placeholder = multi ? "(leave blank to keep)" : "";
   });
   document.getElementById("dbaFields").style.display = syms.some(o => o.type === "dba") ? "block" : "none";
@@ -6021,6 +6690,30 @@ function openDetails() {
   if (xtTargets.length) {
     const xv = xtTargets[0].xt || "";
     document.getElementById("dXtype").value = xtTargets.every(o => (o.xt || "") === xv) ? xv : "";
+  }
+  /* PASS 24 item 5: every symbol type gets Brand/Model/Serial except the photo
+     pin, which is a marker rather than a piece of equipment. */
+  document.getElementById("idWrap").style.display = syms.some(o => o.type !== "campin") ? "block" : "none";
+  fsOcrSyncButton();
+  /* PASS 24 item 6 */
+  const thTargets = syms.filter(o => o.type === "thermal" || o.type === "cthermal");
+  document.getElementById("thWrap").style.display = thTargets.length ? "block" : "none";
+  if (thTargets.length) {
+    const mv = thTargets[0].thm === "fixed" ? "fixed" : "ror";
+    const same = thTargets.every(o => (o.thm === "fixed" ? "fixed" : "ror") === mv);
+    document.getElementById("dThRor").checked = same && mv === "ror";
+    document.getElementById("dThFix").checked = same && mv === "fixed";
+    document.getElementById("dThRorV").value = (mv === "ror" && same && thTargets[0].thv) ? thTargets[0].thv : "60";
+    document.getElementById("dThFixV").value = (mv === "fixed" && same && thTargets[0].thv) ? thTargets[0].thv : "60";
+    /* radio behaviour with a checkbox look: ticking one unticks the other, and
+       untickable-to-nothing is not offered because a thermal is always one or
+       the other and a blank selector would just be a third state to handle */
+    document.querySelectorAll(".dTh").forEach(cb => {
+      cb.onchange = () => {
+        document.querySelectorAll(".dTh").forEach(x => { x.checked = (x === cb); });
+        cb.checked = true;
+      };
+    });
   }
   const msTargets = syms.filter(o => o.type === "msensor");
   document.getElementById("msWrap").style.display = msTargets.length ? "block" : "none";
@@ -6061,6 +6754,22 @@ function openDetails() {
   detailsModal.classList.add("show");
 }
 document.getElementById("btnDetails").onclick = openDetails;
+/* PASS 24 item 14 — wiring. The sheet writes into the DETAILS inputs, not into
+   the objects: Save on the details modal is still the only thing that commits,
+   so a scan can be abandoned exactly like a typo can. */
+document.getElementById("dScanBtn").onclick = fsOcrOpen;
+document.getElementById("ocrFile").addEventListener("change", e => {
+  const f = e.target.files && e.target.files[0];
+  if (f) fsOcrRun(f);
+});
+document.getElementById("ocrCancel").onclick = () => { document.getElementById("ocrModal").classList.remove("show"); };
+document.getElementById("ocrUse").onclick = () => {
+  ["brand", "model", "serial"].forEach(k => {
+    const v = document.getElementById("ocr" + k.charAt(0).toUpperCase() + k.slice(1)).value.trim();
+    if (v) document.getElementById((fsOcrTargetFields || {})[k] || ("d" + k)).value = v;
+  });
+  document.getElementById("ocrModal").classList.remove("show");
+};
 document.getElementById("mA").onclick = () => dbaMeasureToggle("a");
 document.getElementById("mE").onclick = () => dbaMeasureToggle("e");
 function stopDbaMeasure() {
@@ -6119,6 +6828,12 @@ document.getElementById("detailsSave").onclick = () => {
           if (wasDefCol && TYPE_MAP[nt].color) o0.color = TYPE_MAP[nt].color;
           if (nt !== "exting") delete o0.xt; else document.getElementById("dXtype").value = (o0.xt || "");
           if (nt !== "msensor") delete o0.cov; else document.getElementById("dMsCov").value = (o0.cov || "360");
+          /* PASS 24 item 6: changing away from a thermal drops its setting, and
+             changing TO one gives it the default rather than nothing. A stale
+             thm on a smoke detector would be invisible and would surface later
+             in an export as a device that claims a rate-of-rise threshold. */
+          if (nt !== "thermal" && nt !== "cthermal") { delete o0.thm; delete o0.thv; }
+          else if (!o0.thm) { o0.thm = "ror"; o0.thv = o0.thv || "60"; }
         }
       }
     }
@@ -6128,6 +6843,9 @@ document.getElementById("detailsSave").onclick = () => {
       loop: document.getElementById("dLoop").value.trim(),
       dev:  document.getElementById("dDev").value.trim(),
       info: document.getElementById("dInfo").value.trim(),
+      brand:  document.getElementById("dBrand").value.trim(),
+      model:  document.getElementById("dModel").value.trim(),
+      serial: document.getElementById("dSerial").value.trim(),
       va:   document.getElementById("dVa").value.trim(),
       ve:   document.getElementById("dVe").value.trim()
     };
@@ -6146,6 +6864,28 @@ document.getElementById("detailsSave").onclick = () => {
       }
       if (o.type === "msensor") {
         o.cov = document.getElementById("dMsCov").value === "180" ? "180" : "360";
+      }
+      /* PASS 24 item 6 — mutually exclusive, so exactly one of thm is stored and
+         thv is the value of the box that belongs to it. Storing the unselected
+         box too would be storing a number the user cannot see.
+
+         The visibility guard is not defensive dressing, it is a bug test_p24
+         F18 found before this shipped. The selector is only populated by
+         openDetails when a thermal is among the targets. Open a SMOKE detector,
+         change its type to thermal, and this branch would otherwise read
+         checkboxes that were never reset — the last thermal's Fixed / 72 degC,
+         from a dialog this user never saw — and write them onto the new device.
+         When the selector was not on screen the user expressed no preference,
+         so the default set by the change-type block above stands. */
+      if (o.type === "thermal" || o.type === "cthermal") {
+        if (document.getElementById("thWrap").style.display !== "none") {
+          const fixed = document.getElementById("dThFix").checked;
+          o.thm = fixed ? "fixed" : "ror";
+          const raw = (fixed ? document.getElementById("dThFixV") : document.getElementById("dThRorV")).value.trim();
+          o.thv = /^[0-9]{1,3}$/.test(raw) ? raw : "60";
+        } else if (!o.thm) {
+          o.thm = "ror"; o.thv = "60";
+        }
       }
       if (!multi || failedTouched) o.failed = failed;
       document.querySelectorAll(".dYear").forEach(cb => {
@@ -6716,7 +7456,9 @@ function renderExportCanvasInner() {
 
 /* ---- minimal single-page PDF wrapping a JPEG ---- */
 function canvasToPdfBlob(canvas) {
-  const jpegB64 = canvas.toDataURL("image/jpeg", 0.92).split(",")[1];
+  /* the single flatten point for export: a PDF page is opaque, and a raw
+     JPEG encode of a transparent notch would print it BLACK */
+  const jpegB64 = fsJpegFlat(canvas, 0.92).split(",")[1];
   const bin = atob(jpegB64);
   const jpeg = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) jpeg[i] = bin.charCodeAt(i);
@@ -12211,7 +12953,8 @@ function fsInfoPhotoHtml() {
   if (!spAll.length) {
     html += '<div id="fsSitePhotoAdd" style="width:100%;height:180px;border:2px dashed var(--fs-border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--fs-faint);font-size:13px;cursor:pointer">Tap to add site photo</div>';
   } else {
-    html += '<img class="fsSpTile" data-i="0" src="' + spAll[0] + '" style="width:100%;height:180px;object-fit:cover;border-radius:10px;cursor:pointer" title="Tap to view full size">';
+    html += '<div style="position:relative"><img class="fsSpTile" data-i="0" src="' + spAll[0] + '" style="width:100%;height:180px;object-fit:cover;border-radius:10px;cursor:pointer" title="Tap to view full size">' +
+      '<div class="fsSpDel" data-i="0" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:#c62828;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer" title="Remove this photo">&#10005;</div></div>';
     if (spAll.length > 1) {
       html += '<div style="display:flex;gap:6px;flex-wrap:wrap">';
       spAll.slice(1).forEach((p, i) => {
@@ -12600,7 +13343,18 @@ function fsRenderTab() {
     document.querySelectorAll(".fsSpDel").forEach(b => {
       b.onclick = () => {
         if (!confirm("Remove this photo from the site photos?")) return;
-        s.photoExtra.splice(+b.dataset.i - 1, 1);
+        /* index 0 is s.photo, NOT photoExtra[-1]. Before Pass 22 the main
+           tile carried no delete badge at all, so a site whittled down to
+           one photo could never lose it (Reece, 7 Aug). Promote the first
+           extra so the card never blanks while photos remain. */
+        const spi = +b.dataset.i;
+        if (spi === 0) {
+          const spx = s.photoExtra || [];
+          if (spx.length) { s.photo = spx.shift(); s.photoExtra = spx; }
+          else delete s.photo;
+        } else {
+          s.photoExtra.splice(spi - 1, 1);
+        }
         fsMarkDirty();
         fsRenderTab();
       };
