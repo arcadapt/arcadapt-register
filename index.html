@@ -147,7 +147,7 @@
 </head>
 <body>
 <script>/* Build stamp — MUST equal the CACHE name in sw.js. test_version.py enforces it. */
-const FS_BUILD = "ed-v31";
+const FS_BUILD = "ed-v32";
 </script>
 <style>
   #fsReg { --fs-bg:#eef1f4; --fs-card:#ffffff; --fs-text:#17262e; --fs-sub:#5b6b73; --fs-sub2:#7c8a91; --fs-faint:#9fb0b7; --fs-border:#dfe5e9; --fs-accent:#0f5e6b; --fs-accentD:#0b4954;
@@ -183,7 +183,7 @@ const FS_BUILD = "ed-v31";
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
       <span class="edWm" style="font-size:24px;display:inline-flex;align-items:center;gap:9px"><img src="icon-192.png" style="width:34px;height:34px;border-radius:6px" alt=""> <span><span class="w1">Ever</span><span class="w2">Due</span></span></span>
       <!-- EverDue lineage reset (Reece, 29 Jul 2026): EverDue v0.01 beta == Arc Adapt Register v0.01 == FireSpark Register v1.32 / wsr-v46 feature state (fs V1.30), for future diffing -->
-      <span id="fsVerBadge" style="font-size:11px;color:#7c8a91">register V0.27 beta</span>
+      <span id="fsVerBadge" style="font-size:11px;color:#7c8a91">register V0.28 beta</span>
       <span style="flex:1"></span>
       <button class="fsbtn" id="fsFileBtn" title="Files &mdash; load, save a copy, share, OneDrive, export one client">&#128193; Files</button>
       <button class="fsbtn" id="fsLoadRegBtn" title="Load / replace the register file">&#128194; Load</button>
@@ -245,7 +245,7 @@ const FS_BUILD = "ed-v31";
     <button class="btn" id="fsBack" title="Back to site">&#9664; Site</button>
     <button class="btn" id="fsTestBtn" title="Start or continue a Monthly / 6 Monthly / Annual / 5 Yearly test session" style="background:#1b8a3f;border-color:#2fae57;color:#fff;font-weight:700">&#9654; Start test</button>
     <button class="btn" id="fsBinBtn" title="Site recycle bin — replaced/deleted registered devices">&#128465; Bin</button>
-    <span class="title">EverDue <span style="color:#888;font-weight:400;font-size:11px">V0.27 beta</span></span>
+    <span class="title">EverDue <span style="color:#888;font-weight:400;font-size:11px">V0.28 beta</span></span>
     <span id="fsSiteName" style="font-size:12px;color:#8ab4ff;font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
     <button class="btn" id="btnPlans" title="Plans saved on this device">&#9776; Plans</button>
     <button class="btn" id="btnNew" title="Start a new plan">&#65291; New</button>
@@ -4726,6 +4726,27 @@ function openAnyFile(file) {
 }
 
 /* ================= Project save / open ================= */
+/* PASS 25 item 13 — one copy of the sniff this file was already making twice
+   by hand. iPadOS 13 and later report a Macintosh user agent, so the
+   Macintosh-plus-touch arm is not belt and braces, it is the only thing that
+   catches a modern iPad — which is the device the hint is FOR. */
+function fsIsApple() {
+  const ua = navigator.userAgent || "";
+  return /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints > 1 || "ontouchend" in document));
+}
+/* PASS 25 item 13 — said on the export sheet, before the tap.
+
+   fsIcsDeliver has said the right words since V0.17, in an alert(), AFTER the
+   file has already landed in Files. By then the mistake is made and the alert
+   is a post-mortem of it. This is the same knowledge placed where there is
+   still a decision to be made. The alert stays: it is the net for anyone who
+   taps straight past this, and removing a working message to celebrate its
+   replacement is how a regression ships as an improvement. */
+const FS_ICS_IOS_HINT = '<div style="font-size:12px;color:var(--fs-sub2);line-height:1.45;margin:-2px 0 9px;padding:7px 9px;border-left:3px solid var(--fs-accent);background:rgba(127,127,127,.10);border-radius:0 6px 6px 0">'
+  + '<b>iPad or iPhone?</b> Mail the file to yourself and open it in Mail &mdash; the events appear with an <b>Add All</b> button. '
+  + 'Tapping it in Files does nothing. (Measured on an iPad, 6 Aug 2026.)</div>';
+function fsIcsHint() { return fsIsApple() ? FS_ICS_IOS_HINT : ""; }
+
 function isMobileShare() {
   const ua = navigator.userAgent;
   const iOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
@@ -12931,7 +12952,12 @@ function fsInfoPhotoHtml() {
       vRow("Monthly", "mins") + vRow("6 monthly", "mins6") + vRow("Annual", "minsA") +
       '<div class="fslabel">Preferred start time (blank = can be tested anytime)</div>' +
       '<input class="fsinput" id="fsVisPref" type="time" value="' + fsEsc(vis.pref || "") + '" style="max-width:160px">';
-  } else if (+vis.mins || +vis.mins6 || +vis.minsA || vis.pref) {
+  } else if (+vis.mins || +vis.mins6 || +vis.minsA || vis.pref || fsPlSiteRollup(s).parts.length) {
+    /* PASS 25 item 2 — the old condition hid this row whenever the SITE itself
+       had no hours, which is exactly the state of a site whose time all lives
+       in its buildings. That site displayed nothing at all while the planner
+       quietly booked it for the sum. `.parts.length` is the case being let
+       through. */
     const fm = t => fsPlFmtMins(t);
     const bits = [];
     if (+vis.mins) bits.push("Monthly " + fm(+vis.mins));
@@ -12939,7 +12965,21 @@ function fsInfoPhotoHtml() {
     if (+vis.minsA) bits.push("Annual " + fm(+vis.minsA));
     bits.push(vis.pref ? "preferred start " + fsEsc(vis.pref) : "anytime");
     html += '<div style="display:flex;border-top:1px solid var(--fs-border);padding:11px 0"><div style="width:38%;color:var(--fs-sub);font-size:13.5px">Routine test</div>' +
-      '<div style="flex:1;font-weight:600;font-size:14px">' + bits.join(" &middot; ") + '</div></div>';
+      '<div style="flex:1;font-weight:600;font-size:14px">' + (bits.length > 1 ? bits.join(" &middot; ") : bits.join("")) + '</div></div>';
+    /* PASS 25 item 2 — the total the PLANNER will actually use, and where it
+       came from. Shown only when a building contributes, because on a site
+       with no buildings the total is the figure already printed above it and a
+       row repeating it back is noise. */
+    const roll = fsPlSiteRollup(s);
+    if (roll.parts.length) {
+      let work = '<div style="font-weight:700;font-size:15px">' + fsPlFmtMins(roll.total) + ' on site</div>' +
+        '<div style="color:var(--fs-sub2);font-size:12.5px;margin-top:3px">' +
+        (roll.own > 0 ? fsEsc(s.name) + ' ' + fsPlFmtMins(roll.own) : 'this site itself, not set');
+      roll.parts.forEach(function (p) { work += ' &nbsp;+&nbsp; ' + fsEsc(p.name) + ' ' + fsPlFmtMins(p.mins); });
+      work += '</div>';
+      html += '<div style="display:flex;border-top:1px solid var(--fs-border);padding:11px 0"><div style="width:38%;color:var(--fs-sub);font-size:13.5px">Planner books</div>' +
+        '<div style="flex:1">' + work + '</div></div>';
+    }
   }
   if (!fsInfoEdit && !infoRows.some(([l, k]) => s[k]) && !fsCtList(s).length) html += '<div style="color:var(--fs-faint);font-size:13px">Nothing recorded yet — tap Edit.</div>';
   html += '</div>';
@@ -16383,16 +16423,52 @@ function fsPlMinsForPlan(s, month, kept) {   /* a hand-set duration wins inside 
   if (kept && kept[s.id] > 0) return kept[s.id];
   return fsPlMinsFor(s, month);
 }
-function fsPlMinsFor(s, month) {
-  const v = s.visit || {};
-  const keys = fsPlDueCycles(s, month).map(d => d.key);
+/* PASS 25 item 2 — what has actually been SET on one node, site or building.
+   Returns 0 for "nothing set", which is the honest answer to that question and
+   the reason this is a separate function: the 30-minute default below must be
+   applied once to a site, not once per building. A site with six empty
+   buildings booking three extra hours would be a number the planner invented,
+   on the one screen whose job is to say how much of the day is already gone. */
+function fsPlMinsRaw(s, month) {
+  const v = (s && s.visit) || {};
+  const keys = fsPlDueCycles(s || {}, month).map(d => d.key);
   const annual = keys.indexOf("lastAnnual") >= 0 || keys.indexOf("last5y") >= 0;
   const half = keys.indexOf("last6m") >= 0;
   const order = annual ? ["minsA", "mins6", "mins"]
               : half   ? ["mins6", "mins", "minsA"]
                        : ["mins", "mins6", "minsA"];
   for (let i = 0; i < order.length; i++) { const n = +v[order[i]]; if (n > 0) return n; }
-  return 30;
+  return 0;
+}
+/* PASS 25 item 2 — the site total, and the working behind it.
+
+   Reece's case: Old Maitland = Melbee House 1h + HSU Building 1h + Old
+   Maitland itself 1h30 -> 3h30. One visit covers the whole site, so one stop
+   carries the whole site's hours; buildings share the site address and do not
+   get a stop of their own, or the planner would book a drive leg to a place
+   the technician is already standing.
+
+   `parts` exists so the site card can show its working. A total that appears
+   from nowhere has to be trusted blind, and "why does it say 3h30" is a
+   question best answered on the screen that raised it. */
+function fsPlMinsParts(s, month) {
+  const own = fsPlMinsRaw(s, month);
+  const parts = [];
+  ((s && s.buildings) || []).forEach(function (b) {
+    if (!b) return;
+    const n = fsPlMinsRaw(b, month);
+    if (n > 0) parts.push({ id: b.id, name: b.name || "Building", mins: n });
+  });
+  let total = own;
+  for (let i = 0; i < parts.length; i++) total += parts[i].mins;
+  /* the V0.13 default, applied ONCE, to the site */
+  return { own: own, parts: parts, total: total, mins: total > 0 ? total : 30 };
+}
+/* Unchanged name, unchanged signature, unchanged contract — every existing
+   caller and the whole of test_planner2 keep working without knowing any of
+   the above happened. */
+function fsPlMinsFor(s, month) {
+  return fsPlMinsParts(s, month).mins;
 }
 /* V0.15 — one duration field instead of a minutes-only box.
    The site register has had days+hours+mins boxes all along and fsPlFmtMins
@@ -16432,6 +16508,22 @@ function fsPlParseDur(v) {
   }
   const n = Math.round(total);
   return n > 0 ? n : null;
+}
+/* PASS 25 item 2 — the seam the site card calls through.
+
+   The card is rendered by the register half of this file and the rollup lives
+   in the planner half. Calling fsPlMinsParts straight from the card works
+   today purely because function declarations hoist and both halves happen to
+   share one file — and "happens to share one file" is the thing BACKEND-DESIGN
+   changes. This wrapper is the one place that has to move when it does, and it
+   answers safely rather than throwing if the planner half is ever absent. */
+function fsPlSiteRollup(s) {
+  try {
+    if (typeof fsPlMinsParts !== "function") return { own: 0, parts: [], total: 0, mins: 30 };
+    return fsPlMinsParts(s, (typeof fsPlMonth === "string" && fsPlMonth) || new Date().toISOString().slice(0, 7));
+  } catch (e) {
+    return { own: 0, parts: [], total: 0, mins: 30 };
+  }
 }
 /* the one sentence every duration field says when it cannot read you */
 const FS_DUR_HELP = "Type a time on site: 90, 1h30, 1h 30m, 1.5h, 2:30 or 1d 2h all work. A plain number means minutes.";
@@ -17121,6 +17213,7 @@ function fsPlExportMenu() {
     '<button class="fsbtn" id="fsPlExGridW" style="width:100%;text-align:left;margin-bottom:8px;padding:11px">&#128221; Month calendar &mdash; Word</button>' +
     '<button class="fsbtn" id="fsPlExList" style="width:100%;text-align:left;margin-bottom:8px;padding:11px">&#128203; Day-by-day run sheet &mdash; PDF</button>' +
     '<button class="fsbtn" id="fsPlExIcs" style="width:100%;text-align:left;margin-bottom:8px;padding:11px" title="Opens in Apple / Google / Samsung Calendar">&#128242; Add to phone calendar</button>' +
+    fsIcsHint() +   /* PASS 25 item 13 — Apple only; empty string everywhere else */
     '<button class="fsbtn" id="fsPlExX" style="width:100%;padding:10px">Cancel</button></div>';
   document.body.appendChild(d);
   const go = fn => () => { d.remove(); fn(); };
@@ -17701,6 +17794,7 @@ function fsPlDayHtml(dk) {
   html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px"><h3 style="font-size:16px;font-weight:800;flex:1">' + dt.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" }) + '</h3>' +
     '<button class="fsbtn fsPlLock">' + (mo.locked[dk] ? '&#128274; Locked' : '&#128275; Lock day') + '</button>' +
     '<button class="fsbtn fsPlDayIcs" title="Opens in Apple / Google / Samsung Calendar">&#128242; Add day to phone calendar</button>' +
+    fsIcsHint() +   /* PASS 25 item 13 */
     (stops.length ? '<button class="fsbtn fsPlClrDay" title="Remove every stop on this day">&#128465; Clear day</button>' : '') + '</div>';
   if (!stops.length) html += '<div style="color:var(--fs-faint);font-size:13px">No stops planned this day.</div>';
   const luD = fsPlLunch(fsPlLoadSettings());
