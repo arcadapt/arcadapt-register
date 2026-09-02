@@ -1,4 +1,4 @@
-const CACHE = "ed-v131";
+const CACHE = "ed-v132";
 const PREFIX = "ed-";   // PASS 39 [39-4] — this app owns ONLY its own caches
 if (CACHE.indexOf(PREFIX) !== 0) throw new Error("cache name does not carry its own prefix");
 const ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-512-maskable.png", "./favicon.png", "./pdf.min.js", "./pdf.worker.min.js", "./qr.js", "./jsqr.js", "./zxing.js"];
