@@ -376,7 +376,7 @@ body { height:100%; overflow:hidden; font-family:system-ui,-apple-system,Segoe U
 </head>
 <body>
 <script>/* Build stamp — MUST equal the CACHE name in sw.js. test_version.py enforces it. */
-const FS_BUILD = "ed-v157";
+const FS_BUILD = "ed-v158";
 </script>
 <style>
   /* PASS 105 [R-32] — THE TOKENS WERE A SECRET KEPT BY #fsReg. Declared only
@@ -552,7 +552,7 @@ const FS_BUILD = "ed-v157";
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap">
       <span class="edWm" style="font-size:24px;display:inline-flex;align-items:center;gap:9px"><img src="icon-192.png" style="width:34px;height:34px;border-radius:6px" alt=""> <span><span class="w1">Ever</span><span class="w2">Due</span></span></span>
       <!-- EverDue lineage reset (Reece, 29 Jul 2026): EverDue v0.01 beta == Arc Adapt Register v0.01 == the pre-rename Register v1.32 / wsr-v46 feature state (fs V1.30), for future diffing -->
-      <span id="fsVerBadge" style="font-size:11px;color:var(--fs-sub2)">register V0.153 beta</span>
+      <span id="fsVerBadge" style="font-size:11px;color:var(--fs-sub2)">register V0.154 beta</span>
       <span style="flex:1"></span>
       <button class="fsbtn" id="fsFileBtn" title="File &mdash; load, save a copy, share, OneDrive, export one client"><svg class="fsBtnIco" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 20a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2Z"/></svg>File</button>
       <button class="fsbtn" id="fsLoadRegBtn" title="Load / replace the register file">&#128194; Load</button>
@@ -682,7 +682,7 @@ const FS_BUILD = "ed-v157";
     <button class="btn" id="fsBack" title="Back to site" style="min-height:40px;padding-left:16px;padding-right:16px;font-weight:600">&#9664; Site</button><!-- PASS 121 [W120-3] FS_WS_SITE_BTN - his words: "a button that is regularly pressed, way more than the start test button next to it which is larger". Start test is NOT shrunk; it is deliberately prominent. -->
     <button class="btn" id="fsTestBtn" title="Start or continue a Monthly / 6 Monthly / Annual / 5 Yearly test session" style="background:#1b8a3f;border-color:#2fae57;color:#fff;font-weight:700">&#9654; Start test</button>
     <button class="btn" id="fsBinBtn" style="display:none" title="Site recycle bin — replaced/deleted registered devices">&#128465; Bin</button><!-- PASS 50 [50-4]: moved to the cog; id+handler kept -->
-    <span class="title">EverDue <span style="color:#888;font-weight:400;font-size:11px">V0.153 beta</span></span>
+    <span class="title">EverDue <span style="color:#888;font-weight:400;font-size:11px">V0.154 beta</span></span>
     <span id="fsSiteName" style="font-size:12px;color:#8ab4ff;font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
     <button class="btn" id="btnPlans" style="display:none" title="Plans saved on this device">&#9776; Plans</button><!-- PASS 50 [50-4]: moved to the cog; id+handler kept -->
     <button class="btn" id="btnNew" style="display:none" title="Start a new plan">&#65291; New</button><!-- PASS 50 [50-4]: moved to the cog; id+handler kept -->
@@ -2101,7 +2101,7 @@ const TYPES = [
      which is why Vigilant sell the same article as a "Warden Intercom POINT".
      `name` keeps the commoner expansion (Honeywell, Notifier); the walk offers
      him the other one. */
-  { id:"wip",      tab:"fire", label:"WIP",          glyph:"phone",    text:"",      color:"#c40000", name:"Warden Intercom Phone", numLbl:"Point number", full:"WIP — Warden Intercom Phone, the emergency handset wardens use during an evacuation" },
+  { id:"wip",      tab:"fire", label:"WIP",          glyph:"phone",    text:"",      color:"#c40000", name:"Warden Intercom Phone", numLbl:"Point number", full:"WIP — a Warden Intercom Phone that runs off an EWIS, the handset wardens use during an evacuation" },
   { id:"sounder",  tab:"fire", label:"Sounder",      glyph:"sndr",     text:"",      color:"#e07b00", name:"Alarm Sounder" },
   { id:"horn",     tab:"fire", label:"Horn",         glyph:"horn",     text:"",      color:"#e07b00", name:"Alarm Horn" },
   { id:"sm240",    tab:"fire", label:"240V Smoke",   glyph:"sm240",    text:"",      color:"#f2c200", name:"240V Smoke Alarm" },
@@ -2117,7 +2117,18 @@ const TYPES = [
      pink by default, and sound-wave arcs either side because a VAD sounds as
      well as flashes. Arc style only from refs/pass22-soundwave-ref-fire-bell
      .jpg — the bell symbol itself is not copied. */
-  { id:"vad",      tab:"fire", label:"VAD",          glyph:"vad",      text:"V",     color:"#e91e8c", name:"Visual Alarm Device", full:"VAD — Visual Alarm Device, flashes when the alarm sounds so it reaches people who cannot hear it" },
+  /* PASS 169 [169-A] W148-A - "VAD Detectors, should be default smoke and count
+     towards any counts as a smoke detector", and RULED 7 Sep: "just duplicate
+     the existing one and make the default colour a slightly darker green than
+     the normal thermal detector... the Thermal counts towards the thermal counts
+     and smoke towards the smoke counts."
+     `countsAs` IS READ AT COUNT TIME AND NOTHING IS STORED. No object is
+     rewritten, no key moves, no migration - a reversal is a one-line revert.
+     It reaches zoneCounts and the report Totals ONLY. Not the legend (a KEY to
+     the symbols on the drawing), not the palette badge (how many of THAT tile),
+     not the register (what the asset IS). See claude/W148-A-I-SCOPE.md. */
+  { id:"vad",      tab:"fire", label:"VAD",          glyph:"vad",      text:"V",     color:"#e91e8c", name:"Visual Alarm Device", countsAs:"smoke", full:"VAD — Visual Alarm Device, flashes when the alarm sounds so it reaches people who cannot hear it" },
+  { id:"vadt",     tab:"fire", label:"VAD Thermal",  glyph:"vad",      text:"V",     color:"#12662d", name:"Visual Alarm Device — Thermal", countsAs:"thermal", full:"VAD Thermal — a Visual Alarm Device on a thermal detector, so it counts as a thermal rather than a smoke" },
   { id:"exting",   tab:"fire", label:"Extinguisher", glyph:"exting",   text:"",      color:"#c40000", name:"Fire Extinguisher" },
   /* PASS 108 [W107-4] - Reece sent a red FIRE BLANKET sign
      (refs/pass108-ref-fire-blanket-sign.png) and said "just take away the white
@@ -2488,6 +2499,7 @@ const FS_SYM_MM = {
   io:      { mm: null, mult: 1.0,  draw: "symbol", src: null },
   hreel:   { mm: null, mult: 1.35, draw: "symbol", src: null },
   vad:     { mm: null, mult: 1.9,  draw: "symbol", src: null },
+  vadt:    { mm: null, mult: 1.9,  draw: "symbol", src: null },   /* [169-A] same fitting, same size */
   blanket: { mm: null, mult: 0.95, draw: "symbol", src: null },
 
   /* --- Electrical: no standard plate size exists, so these stay blank ---- */
@@ -12547,11 +12559,13 @@ function reportLines() {
   lvList.forEach(lv => {
     const objs = lv.objects || [];
     lines.push(["h2", multiLevel ? ("Devices by zone — " + lv.name) : "Devices by zone"]);
-    const zones = zoneCounts(objs.filter(o => !(o.kind === "sym" && o.type === "campin")));
+    const noPins = objs.filter(o => !(o.kind === "sym" && o.type === "campin"));
+    const zones = zoneCounts(noPins);
+    const zp = zoneParts(noPins);   /* [169-C] what counted into each bucket */
     const zoneKeys = Object.keys(zones).sort((a, b) => a.localeCompare(b, undefined, { numeric:true }));
     if (!zoneKeys.length) lines.push(["t", "No devices"]);
     zoneKeys.forEach(z => {
-      const parts = Object.entries(zones[z]).map(([ty, n]) => (TYPE_MAP[ty] ? TYPE_MAP[ty].label : ty) + " × " + n);
+      const parts = Object.entries(zones[z]).map(([ty, n]) => fsCountLine(ty, n, zp[z]));
       const total = Object.values(zones[z]).reduce((a, b) => a + b, 0);
       lines.push(["b", "Zone " + z + " (" + total + ")"]);
       lines.push(["t", parts.join(", ")]);
@@ -12562,12 +12576,16 @@ function reportLines() {
   all.forEach(({ o }) => {
     if (o.kind !== "sym") return;
     if (o.type === "campin") { pins++; return; }   // photo pins aren't devices
-    totals[o.type] = (totals[o.type] || 0) + 1;
+    /* [169-C] "count towards any counts as a smoke detector" - the BUCKET.
+       The register and the legend still say what each thing actually is. */
+    totals[fsCountAs(o.type)] = (totals[fsCountAs(o.type)] || 0) + 1;
     grand++;
   });
+  const totParts = fsCountParts(all.map(function (e) { return e.o; })
+                                   .filter(function (o) { return o && o.type !== "campin"; }));
   lines.push(["h2", !multiLevel ? "Totals"
                    : (repOut.length ? "Totals (levels included above)" : "Totals (all levels)")]);
-  Object.entries(totals).forEach(([ty, n]) => lines.push(["t", (TYPE_MAP[ty] ? TYPE_MAP[ty].label : ty) + " × " + n]));
+  Object.entries(totals).forEach(([ty, n]) => lines.push(["t", fsCountLine(ty, n, totParts)]));
   lines.push(["b", "All devices: " + grand]);
   if (pins) lines.push(["t", "Photo pins × " + pins]);
   const failed = all.filter(({ o }) => o.kind === "sym" && o.failed);
@@ -12694,15 +12712,63 @@ document.getElementById("reportPdf").onclick = () => {
 };
 
 /* ================= Zones panel ================= */
+/* ===================== PASS 169 [169-C] - THE COUNTING MODEL =================
+   ONE PLACE ANSWERS "what does this count as", and only the two sites that
+   TALLY read it. claude/W148-A-I-SCOPE.md has the table of all five sites that
+   count by type and why three of them are deliberately left literal. */
+function fsCountAs(type) {
+  const t = (typeof TYPE_MAP !== "undefined") ? TYPE_MAP[type] : null;
+  return (t && t.countsAs) || type;
+}
+/* WHAT COUNTED INTO EACH BUCKET, so a total can say what is inside it.
+   "Spitfire counts normally on spitfire totals but there can be a note where it
+   says how many of each." Only members whose own type differs from the bucket
+   appear - a plain smoke detector is not "a member of smoke". */
+function fsCountParts(list) {
+  const parts = {};
+  (list || []).forEach(function (o) {
+    if (!o || o.kind !== "sym") return;
+    const ct = fsCountAs(o.type);
+    if (ct === o.type) return;
+    parts[ct] = parts[ct] || {};
+    parts[ct][o.type] = (parts[ct][o.type] || 0) + 1;
+  });
+  return parts;
+}
+function fsCountLine(ty, n, parts) {
+  const lab = (typeof TYPE_MAP !== "undefined" && TYPE_MAP[ty]) ? TYPE_MAP[ty].label : ty;
+  const p = parts && parts[ty];
+  if (!p) return lab + " × " + n;
+  const bits = Object.keys(p).map(function (k) {
+    return p[k] + " " + ((TYPE_MAP[k] && TYPE_MAP[k].label) || k);
+  });
+  return lab + " × " + n + " (" + bits.join(", ") + ")";
+}
 function zoneCounts(objs) {
   const zones = {};
   (objs || objects).forEach(o => {
     if (o.kind !== "sym") return;
     const z = (o.zone || "").trim() || "(no zone)";
     zones[z] = zones[z] || {};
-    zones[z][o.type] = (zones[z][o.type] || 0) + 1;
+    /* [169-C] the BUCKET, not the drawn type. A VAD lands in smoke. */
+    const ct = fsCountAs(o.type);
+    zones[z][ct] = (zones[z][ct] || 0) + 1;
   });
   return zones;
+}
+/* the same shape as zoneCounts, one level deeper: zone -> bucket -> member */
+function zoneParts(objs) {
+  const out = {};
+  (objs || objects).forEach(function (o) {
+    if (o.kind !== "sym") return;
+    const ct = fsCountAs(o.type);
+    if (ct === o.type) return;
+    const z = (o.zone || "").trim() || "(no zone)";
+    out[z] = out[z] || {};
+    out[z][ct] = out[z][ct] || {};
+    out[z][ct][o.type] = (out[z][ct][o.type] || 0) + 1;
+  });
+  return out;
 }
 /* PASS 167 [167-D] - W151-E. TEST COUNTS ON THE ZONE COUNTS TOOL.
    "have a few more columns, and have the year and how many were tested that
@@ -12744,8 +12810,9 @@ document.getElementById("btnZones").onclick = () => {
   } else {
     html = "<table><tr><th>Zone</th><th>Devices</th><th>Total</th><th>Tested " + yr + "</th></tr>";
     let tAll = 0, dAll = 0;
+    const zp = zoneParts(null);   /* [169-C] what counted into each bucket */
     keys.forEach(z => {
-      const parts = Object.entries(zones[z]).map(([ty, n]) => (TYPE_MAP[ty] ? TYPE_MAP[ty].label : ty) + " × " + n);
+      const parts = Object.entries(zones[z]).map(([ty, n]) => fsCountLine(ty, n, zp[z]));
       const total = Object.values(zones[z]).reduce((a, b) => a + b, 0);
       const tz = tested[z] || { n:0, done:0 };
       tAll += tz.n; dAll += tz.done;
@@ -13026,9 +13093,10 @@ function renderExportCanvasInner() {
     }
   }
 
+  const zpExp = zoneParts(null);   /* [169-C] what counted into each bucket */
   if (!testExport) zoneKeys.forEach((z, i) => {
     const zy = out.height + 4 + lh + 8 + zoneRowH * i + zoneRowH / 2;
-    const parts = Object.entries(zones[z]).map(([ty, n]) => (TYPE_MAP[ty] ? TYPE_MAP[ty].label : ty) + " × " + n);
+    const parts = Object.entries(zones[z]).map(([ty, n]) => fsCountLine(ty, n, zpExp[z]));
     const total = Object.values(zones[z]).reduce((a, b) => a + b, 0);
     sc.fillStyle = "#222";
     sc.font = "bold " + Math.round(zoneRowH * 0.5) + "px system-ui, sans-serif";
